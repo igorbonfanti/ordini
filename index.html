@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisi Ordini Fornitori - Antigravity</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* ============ BACKGROUNDS ============ */
+            --bg: #0f1117;           /* Sfondo principale dell'app */
+            --surface: #1a1d27;      /* Superficie di base (Card principale) */
+            --surface2: #232735;     /* Superficie secondaria */
+            --surface3: #2c3044;     /* Superficie terziaria */
+            
+            /* ============== BORDERS ============== */
+            --border: #333850;       /* Bordi standard divisori */
+            
+            /* ================ TYPOGRAPHY ================ */
+            --text: #e8eaf0;         /* Testo primario */
+            --text2: #9fa4b8;        /* Testo secondario */
+            --text3: #6b7194;        /* Testo terziario / Placeholder */
+            
+            /* ============= BRAND / ACCENT ============= */
+            --accent: #f59e0b;       /* Ambra/Arancione primario */
+            --accent2: #fbbf24;      /* Ambra chiaro */
+            --accent-bg: rgba(245, 158, 11, 0.08); /* Sfondo accent */
+            
+            /* ============ STATUS COLORS ============ */
+            --green: #22c55e;        /* Successo */
+            --green-bg: rgba(34, 197, 94, 0.08);
+            --green-border: rgba(34, 197, 94, 0.2);
+            
+            --red: #ef4444;          /* Errore */
+            --red-bg: rgba(239, 68, 68, 0.08);
+            --red-border: rgba(239, 68, 68, 0.25);
+            
+            --orange: #f97316;       /* Warning */
+            --orange-bg: rgba(249, 115, 22, 0.1);
+            
+            /* =============== BORDER RADIUS =============== */
+            --radius: 12px;
+            --radius-sm: 8px;
+            --radius-full: 9999px;
+        }
+
+        html, body {
+            height: 100vh;
+            height: -webkit-fill-available;
+            height: 100dvh;
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        /* ---------------- HEADER ---------------- */
+        .app-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .settings {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* ---------------- INPUTS & BUTTONS ---------------- */
+        .input-standard {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 10px 16px;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .input-standard:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-bg);
+        }
+        .input-standard::placeholder {
+            color: var(--text3);
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            border: none;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all .15s ease-in-out;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg);
+        }
+        .btn-primary:hover {
+            background: var(--accent2);
+        }
+        .btn-secondary {
+            background: var(--surface3);
+            color: var(--text2);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover {
+            background: var(--border);
+            color: var(--text);
+        }
+
+        /* ---------------- MAIN CONTENT ---------------- */
+        .main-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .view {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+        }
+        .view.active {
+            display: flex;
+        }
+
+        /* ---------------- DROP ZONE ---------------- */
+        .drop-zone {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            background: var(--surface);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--accent);
+            background: var(--surface2);
+        }
+        .drop-zone .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        .drop-zone p {
+            color: var(--text2);
+        }
+
+        /* ---------------- LOADER ---------------- */
+        #loadingView {
+            align-items: center;
+            justify-content: center;
+        }
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ---------------- TABLE ---------------- */
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .table-wrap {
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--surface);
+            overflow-y: auto;
+            margin-bottom: 24px;
+            max-height: 50vh;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        thead th {
+            padding: 8px 12px;
+            text-align: left;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text3);
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        tbody tr {
+            border-bottom: 1px solid rgba(51, 56, 80, 0.3);
+            cursor: pointer;
+            transition: background .1s;
+        }
+        tbody tr:hover {
+            background: var(--surface2);
+        }
+        tbody td {
+            padding: 8px 12px;
+            font-size: 12px;
+            vertical-align: middle;
+        }
+        
+        .td-mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            text-align: right;
+        }
+        .td-mono-left {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            text-align: left;
+        }
+        .text-small {
+            font-size: 10px;
+            color: var(--text3);
+            display: block;
+            margin-top: 4px;
+            font-family: 'DM Sans', sans-serif;
+            text-align: left;
+        }
+        .text-highlight {
+            color: var(--green);
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        /* ---------------- SUMMARY ---------------- */
+        .summary-section {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        .summary-card {
+            flex: 1;
+            min-width: 300px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+        .summary-card h3 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: var(--text2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .error-message {
+            color: var(--red);
+            background: var(--red-bg);
+            border: 1px solid var(--red-border);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            margin-top: 16px;
+            display: none;
+        }
+
+        /* ---- TOOLBAR RISULTATI ---- */
+        .results-toolbar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* ---- BADGE STATO FIREBASE ---- */
+        .firebase-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-weight: 500;
+        }
+        .firebase-badge.saved   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+        .firebase-badge.saving  { background: var(--accent-bg); color: var(--accent); border: 1px solid rgba(245,158,11,0.3); }
+        .firebase-badge.error   { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
+
+        /* ---- VISTA STORICO ---- */
+        #storicoView {
+            padding: 24px;
+            overflow-y: auto;
+        }
+        .storico-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .storico-search {
+            width: 280px;
+        }
+        .storico-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .storico-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: border-color 0.15s;
+        }
+        .storico-card:hover { border-color: var(--accent); }
+        .storico-card-info { flex: 1; }
+        .storico-card-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        .storico-card-meta {
+            font-size: 12px;
+            color: var(--text2);
+        }
+        .storico-card-total {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--accent);
+            margin-left: 20px;
+            white-space: nowrap;
+        }
+        .storico-empty {
+            text-align: center;
+            color: var(--text3);
+            padding: 48px 0;
+            font-size: 14px;
+        }
+
+        /* ---- PRINT STYLES ---- */
+        @media print {
+            .app-header, .results-toolbar, #btnNuovo,
+            .results-header button, .storico-header { display: none !important; }
+            body { background: white; color: black; overflow: visible !important; }
+            .main-content { overflow: visible !important; }
+            #resultsView { overflow: visible !important; }
+            .table-wrap { overflow: visible !important; }
+            table { font-size: 11px; }
+            .summary-section { page-break-inside: avoid; }
+            .summary-card { background: #f9f9f9; border: 1px solid #ddd; color: black; }
+            .summary-card h3, li, td, th { color: black !important; }
+            .text-highlight { color: #1a6b2f !important; font-weight: bold; }
+        }
+    </style>
+    <!-- SheetJS per export Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Firebase SDK (compat v9) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <div class="app-header">
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+            Antigravity Ordini <span style="font-size: 12px; color: var(--text3); margin-left: 8px; font-weight: normal;">v1.0.0</span>
+        </div>
+        <div class="settings">
+            <select id="modelSelect" class="input-standard">
+                <optgroup label="Claude">
+                    <option value="claude-sonnet-4-6" selected>Claude Sonnet 4.6</option>
+                    <option value="claude-haiku-4-5">Claude Haiku 4.5</option>
+                    <option value="claude-opus-4-7">Claude Opus 4.7</option>
+                </optgroup>
+                <optgroup label="Gemini">
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                    <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                </optgroup>
+            </select>
+            <input type="password" id="apiKeyInput" class="input-standard" placeholder="API Key" style="width: 300px;">
+            <button class="btn btn-secondary" id="btnTestApi">Test API</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <!-- VISTA UPLOAD -->
+        <div id="uploadView" class="view active">
+            <div class="drop-zone" id="dropZone">
+                <div class="icon">📄</div>
+                <h3>Carica Conferma d'Ordine</h3>
+                <p>Trascina il PDF qui o clicca per selezionare</p>
+                <input type="file" id="fileInput" accept="application/pdf" hidden>
+            </div>
+            <div id="uploadError" class="error-message"></div>
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-secondary" id="btnStoricoUpload" style="font-size: 15px; padding: 10px 20px;">📋 Accedi allo Storico</button>
+            </div>
+        </div>
+        
+        <!-- VISTA CARICAMENTO -->
+        <div id="loadingView" class="view">
+            <div class="loader"></div>
+            <h3>Analisi in corso con <span id="loadingModelLabel"></span>...</h3>
+            <p style="color: var(--text3);">Questa operazione potrebbe richiedere alcuni secondi.</p>
+        </div>
+        
+        <!-- VISTA RISULTATI -->
+        <div id="resultsView" class="view">
+            <div class="results-header">
+                 <h2>Risultati Analisi</h2>
+                 <div class="results-toolbar">
+                     <span id="firebaseBadge" style="display:none;"></span>
+                     <button class="btn btn-secondary" id="btnExcel" title="Esporta Excel">📊 Excel</button>
+                     <button class="btn btn-secondary" id="btnStampa" title="Stampa">🖨️ Stampa</button>
+                     <button class="btn btn-secondary" id="btnSalva" title="Salva su Firebase">💾 Salva Ordine</button>
+                     <button class="btn btn-secondary" id="btnStorico" title="Storico ordini salvati">📋 Storico</button>
+                     <button class="btn btn-primary" id="btnNuovo">Nuovo Documento</button>
+                 </div>
+            </div>
+            
+            <div class="table-wrap">
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Codice</th>
+                            <th style="text-align: left;">Descrizione</th>
+                            <th style="text-align: right;">Qtà</th>
+                            <th style="text-align: right;">Cont./Pz</th>
+                            <th style="text-align: right;">Listino</th>
+                            <th style="text-align: right;">Sconti</th>
+                            <th style="text-align: right;">Netto/Pz</th>
+                            <th style="text-align: right;">Oneri/Pz</th>
+                            <th style="text-align: right;">Costo/Pz</th>
+                            <th style="text-align: right;">Tot. Riga</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            
+            <div class="summary-section">
+                <div class="summary-card">
+                    <h3>Riepilogo Oneri & Documento</h3>
+                    <div id="oneriSummary"></div>
+                </div>
+                <div class="summary-card">
+                    <h3>Avvertenze & Verifiche</h3>
+                    <div id="warningsList"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- VISTA STORICO -->
+        <div id="storicoView" class="view">
+            <div class="storico-header">
+                <h2>Storico Ordini Salvati</h2>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <input type="text" id="storicoSearch" class="input-standard storico-search" placeholder="Cerca fornitore, numero doc...">
+                    <button class="btn btn-secondary" id="btnChiudiStorico">✕ Chiudi</button>
+                </div>
+            </div>
+            <div id="storicoList" class="storico-list">
+                <div class="storico-empty">Caricamento...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // FIREBASE INIT
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCLdOfp4z3FUJX2xt-xBZciyjxJZWeoh7A",
+            authDomain: "magazzino-edile-pos.firebaseapp.com",
+            projectId: "magazzino-edile-pos",
+            storageBucket: "magazzino-edile-pos.firebasestorage.app",
+            messagingSenderId: "696561179056",
+            appId: "1:696561179056:web:fc6b1db62ed256fd3fde75"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Stato corrente — popolato dopo ogni analisi riuscita
+        let _currentCalcResult = null;
+        let _currentDataJSON  = null;
+
+        // ==========================================
+        // SYSTEM PROMPT
+        // ==========================================
+        const SYSTEM_PROMPT = `Analizzi documenti commerciali di fornitori edili italiani (conferme d'ordine,
+fatture proforma, offerte di vendita, proposte d'ordine, ordini di vendita).
+Restituisci SOLO un oggetto JSON valido. Mai markdown, mai backtick, mai testo.
+
+🛑 ATTENZIONE - SINTASSI JSON CRITICA:
+- USA SOLO virgolette doppie (") per TUTTE le chiavi e valori stringa. MAI apici singoli (').
+- Non inserire virgolette doppie (") dentro i valori testuali. Usa apici singoli (') per citazioni interne.
+- Qualsiasi errore di punteggiatura JSON causa un crash dell'applicazione.
+
+══════════════════════════════════════════════════════
+REGOLA 1 — IDENTIFICAZIONE DEL PEZZO FISICO
+══════════════════════════════════════════════════════
+
+L'obiettivo è trovare il PEZZO FISICO che entra in magazzino:
+sacco, secchio, latta, bidone, blocco, tavella, tanica, rotolo,
+scatola, blister, cartuccia, fustino, fusto, barattolo, ecc.
+
+NON interessa il prezzo per kg, m², lt, TO. Queste sono UM del listino.
+
+FONTE PRIMARIA per quanti pezzi fisici sono stati ordinati:
+Il campo nel documento che conta le confezioni. Si chiama:
+N.CONF, Conf.Nr., Quantità ordinata (in PZ), Pezzi/Pcs, o simile.
+
+Contenuto per pezzo = qty_totale_UM ÷ num_pezzi_fisici
+
+VERIFICA: il risultato deve corrispondere a quanto descritto nel nome articolo.
+
+ECCEZIONE ISOLANTI: per i prodotti isolanti — lana di vetro, lana di roccia,
+lana minerale, polistirene (EPS/XPS), polistirolo, pannelli isolanti,
+lastre isolanti, pannelli acustici, pannelli fonoassorbenti —
+l'unità di misura del pezzo fisico è SEMPRE il metro quadro (m2),
+NON il singolo pannello e NON il pacco/collo.
+
+Quando il prodotto è un isolante:
+  um_pezzo_fisico = "m2"
+  num_pezzi_fisici = qty_totale_um (la quantità totale in m2 dell'ordine)
+  qty_um_per_pezzo = 1
+  contenuto_pezzo = "1 m2"
+  prezzo_listino_per_um = prezzo per m2 dal documento (invariato)
+  um_prezzo = "m2" (invariato)
+
+Il valore_netto_riga resta il totale della riga come da documento.
+
+Esempio ATS ordine 826:
+  Pann lana vetro MINERAL WOOL 35, 276,48 mq a 8,00 €/mq sconto 64%:
+    um_pezzo_fisico = "m2"
+    num_pezzi_fisici = 276.48
+    qty_um_per_pezzo = 1
+    contenuto_pezzo = "1 m2"
+    prezzo_listino_per_um = 8.00
+    valore_netto_riga = 796.26
+
+Il calcolo poi darà automaticamente:
+  Listino/m2 = 8,00€
+  Netto/m2 = 2,88€ (8,00 × 0,36)
+  Oneri/m2 = 0,14€ (40€ trasporto ÷ 276,48 proporzione)
+  Costo/m2 = 3,02€
+
+Come riconoscere un isolante: cercare nel codice o nella descrizione queste parole chiave:
+  lana vetro, lana roccia, lana minerale, mineral wool, rock wool, glass wool,
+  polistirene, polistirolo, EPS, XPS, isolante, isolamento, pannello termico,
+  pannello acustico, fonoassorbente, fonoisolante, Silence, Acoustic,
+  MINERAL WOOL, ROCK WOOL, Styrodur, Neopor, Stiferite, Europlus
+
+══════════════════════════════════════════════════════
+REGOLA 2 — PATTERN DA RICONOSCERE NEL NOME ARTICOLO
+══════════════════════════════════════════════════════
+
+CONTENITORI SEMPLICI (un numero + unità):
+  "fustini 5 kg" → fustino da 5 kg
+  "sacchi 25 kg" → sacco da 25 kg
+  "bucket 10kg" → secchio da 10 kg
+  "Latta 20 KG" → latta da 20 kg
+  "taniche 5lt" → tanica da 5 lt
+  "Latta cont. 5 l" → latta da 5 L
+  "Latta da 5 L (7,1kg)" → latta da 5L, peso 7,1 kg
+  "Sacco cont. 25 kg" → sacco da 25 kg
+
+CONFEZIONI MULTIPLE (pattern N×M → moltiplicare):
+  "scatole 4x5 kg" → scatola contenente 4 sacchetti da 5 kg = 20 kg/scatola
+  "scatole 4X5 kg" → identico (X maiuscola)
+  "scatole 10x1lt" → scatola da 10×1 = 10 lt
+  "box of 50" → scatola contenente 50 pezzi
+
+  ATTENZIONE: NON confondere con dimensioni fisiche.
+  Dimensioni: 3 numeri (LxPxH) in cm/mm → "10x62,5x25" = dimensione blocco
+  Confezioni: 2 numeri (N×M) seguiti da kg/lt/pz → "4x5 kg" = 4 sacchetti da 5 kg
+
+BLOCCHI E TAVELLE (pezzi per bancale tra parentesi):
+  "sp.10x62,5x25 maschiato (96)" → 96 pezzi per bancale
+  "sp.5x62,5x25 liscia(144)" → 144 pezzi per bancale
+  "25kg/sac-42sac/pal" → 42 sacchi per bancale
+  num_pezzi_fisici = pezzi_per_bancale × num_bancali_ordinati (PAL)
+
+PANNELLI ISOLANTI (m² per pezzo dalle dimensioni):
+  "1200x600x40mm" → 1,2 × 0,6 = 0,72 m²/pannello
+  "1000x600" → 1,0 × 0,6 = 0,60 m²/pannello
+  num_pezzi_fisici = qty_totale_m2 ÷ m2_per_pannello
+
+CARTUCCE:
+  "Unipac cont. 600 ml" → pezzo = cartuccia/unipac
+
+══════════════════════════════════════════════════════
+REGOLA 3 — SCONTI (estrarre come array ordinato)
+══════════════════════════════════════════════════════
+
+  - Un solo sconto: "50%" → sconti: [50]
+  - Due a cascata: "45,00" poi "15,00" → sconti: [45, 15]
+  - Tre a cascata: "-50% / -10% / -35%" → sconti: [50, 10, 35]
+  - "Sconto gruppo 60,500-%" → sconti: [60.5]
+  - Nessuno → sconti: []
+
+══════════════════════════════════════════════════════
+REGOLA 4 — IVA NON È UNO SCONTO
+══════════════════════════════════════════════════════
+
+L'aliquota IVA (22%, 10%, 4%) NON è mai uno sconto commerciale.
+
+L'IVA si trova in:
+  - Colonna "IVA" con codice (es. "22", "D22", "IVA22")
+  - Sezione riepilogo IVA in calce ("IVA/VAT 22%")
+  - Riga separata tipo "IVA vendite - 22%"
+
+Gli sconti si trovano in:
+  - Colonna "Sconto/Discount" sulla riga articolo
+  - Label "Sconto 1", "Sconto 2", "Sc%", "Sconto gruppo"
+  - Righe con percentuali negative sotto il prezzo di listino
+
+Se un valore "22" appare sia come IVA che come possibile sconto,
+è IVA se si trova in una colonna IVA, in un riepilogo fiscale,
+o dopo una riga "Imponibile". NON estrarlo come sconto.
+
+══════════════════════════════════════════════════════
+REGOLA 5 — IMPONIBILE vs TOTALE IVA INCLUSA
+══════════════════════════════════════════════════════
+
+Estrarre SEPARATAMENTE:
+  totali.imponibile → BASE IVA COMPLETA (senza IVA)
+  totali.totale_iva_inclusa → importo CON IVA
+
+IMPORTANTE: totali.imponibile deve essere la BASE IVA COMPLETA,
+cioè il valore su cui il fornitore calcola l'IVA.
+Comprende articoli + trasporto + bancali + sovrapprezzi — tutto ciò soggetto a IVA.
+
+CONTROLLO: imponibile × (1 + aliquota_IVA) deve essere ≈ totale_iva_inclusa.
+Se non quadra, ricavare l'imponibile corretto: totale_iva_inclusa ÷ 1,22.
+
+IMPONIBILE (senza IVA):
+  "Imponibile" / "Imponibile al 22%" / "Base IVA"
+  "Totale Netto" / "Netto in corso" — usare QUESTO nei documenti Mapei
+    perché include il trasporto Tra., a differenza di "Totale Merce"
+  "Totale Merce" — SOLO se non esiste anche un "Totale Netto" separato
+
+TRASPORTO FISSO SEPARATO (es. ATS Isolanti):
+  Se il documento mostra un "Totale Imponibile" o "Totale Merce" come
+  subtotale articoli E le spese trasporto sono elencate a parte sopra
+  la riga IVA → SOMMARLI per ottenere la base IVA reale:
+    totali.imponibile = subtotale_articoli + spese_trasporto_fisso
+  Esempio ATS: "Totale Imponibile 1.111,45" + "Spese Trasporto 40,00"
+    → totali.imponibile = 1151.45
+
+TOTALE IVA INCLUSA:
+  "Totale fattura" / "Totale da Pagare"
+  "Totale documento" / "Importo totale" / "Totale"
+  Qualsiasi importo che SEGUE una riga "IVA XX%" con l'importo IVA
+
+══════════════════════════════════════════════════════
+REGOLA 6 — ONERI ACCESSORI
+══════════════════════════════════════════════════════
+
+Cercare: Tra., Trasporto, Spese Trasporto, Porto, Carburante,
+Sovrapprezzo, Bancale, Pallet, CONAI, Addebito, Spese Accessorie,
+Sc. Incondiz., EXW, Franco, CPT, DAP.
+
+TIPI DI TRASPORTO (estrarre in trasporto_tipo):
+
+  "incluso" → porto franco, franco destino, CPT, DAP → nessun addebito
+  
+  "per_um_riga" → colonna Tra. sulla riga articolo (es. Mapei: 0,022 €/kg).
+    ATTENZIONE: il valore Tra. è in €/UM (stessa unità del prezzo).
+    Va MOLTIPLICATO per il contenuto del pezzo per ottenere l'onere per pezzo.
+    Può avere valori DIVERSI per articoli con UM diverse nello stesso ordine
+    (es. 0,022 €/kg per solidi, 0,024 €/lt per liquidi).
+  
+  "riga_separata" → riga "Addebito Spese Trasporto" sotto ogni articolo.
+    Il prezzo indicato è GIÀ per pezzo/sacco. NON moltiplicare per nulla.
+    Associare alla riga articolo immediatamente precedente.
+  
+  "fisso_globale" → importo fisso per l'intero ordine (es. "Spese Trasporto 40,00").
+    Da ripartire proporzionalmente al VALORE NETTO di ogni riga articolo.
+  
+  "percentuale_valore" → % sul totale (es. "3% imp. materiale oltre €1.500").
+    Estrarre sia la percentuale che l'eventuale soglia.
+  
+  "soglia_franchigia" → gratis sopra una soglia (es. "franco da 800 euro").
+    Se il totale ordine è sotto soglia: avvertenza trasporto non quantificato.
+  
+  "exw" → ritiro cliente, trasporto a carico dell'acquirente, non addebitato.
+
+RIGHE NON-ARTICOLO:
+
+  "Bancale a rendere" / "BANCALE A RENDERE CONSEGNATO" → bancale_rendere
+    COSTO = 0. È una cauzione rimborsabile. MAI includere nel costo.
+  
+  REGOLA EUROPALLET: I bancali di tipo Europallet / EUR / EPAL / 
+  "Bancale Europallet" / "Europallet 1200x800" sono SEMPRE bancale_rendere,
+  anche se il documento li segna con [V], "venduto", o mostra un prezzo.
+  Sono cauzioni rimborsabili. tipo_riga = "bancale_rendere".
+  Solo i "Bancale vendita cliente" o "Bancale a perdere" sono costi reali.
+  
+  "Bancale a perdere" → bancale_perdere → includere nel costo
+  
+  "Bancale vendita cliente" / "Bancale venduto" → bancale_venduto
+    Includere nel costo. Distribuire 1 bancale per PAL ordinato:
+    costo_bancale_per_pezzo = prezzo_bancale ÷ pezzi_per_bancale
+  
+  "Addebito Spese Trasporto" → onere_riga
+    Associare all'articolo precedente (articolo_padre_pos).
+  
+  "Sovrapprezzo Carburante" e simili → sovrapp_globale
+    Inserire sia in articoli[] (tipo_riga: "sovrapp_globale")
+    SIA in oneri_generali.altri_oneri[] (tipo: "sovrapp_globale", importo: valore).
+    Questo garantisce la distribuzione anche se Step 6B non è raggiunto.
+    Ripartire per valore su SOLO gli articoli principali.
+  
+  "Sc. Incondiz. Val." → sconto a valore sull'intero ordine
+
+UM MISTE: ogni riga ha la propria UM. Estrarre per singola riga.
+
+VALORE NETTO RIGA: se il documento mostra un totale di riga già scontato
+(es. "Valore netto articolo", "Valore netto di posizione", "Importo"),
+estrailo in valore_netto_riga. È la fonte più precisa per il calcolo.
+
+══════════════════════════════════════════════════════
+REGOLA 7 — LETTURA FOOTER TABELLE RIEPILOGO
+══════════════════════════════════════════════════════
+
+Molti documenti italiani hanno un footer con tabella multi-colonna dove
+i campi sono intestazioni di celle spesso VUOTE:
+
+  Trasporto | Preparazione Ordine | Fat.Anticipo | Resa/Delivery | Sconto Cassa
+  (vuoto)   | (vuoto)             | (vuoto)      | DAP...        |
+
+Sulla riga successiva compaiono dati fisici e totali:
+  Tot.Pezzi | Palette | Colli sfusi | Peso netto | Peso lordo | Totale fattura
+      4     |         |             |   40,00    |   41,88    |    292,80
+
+REGOLE CRITICHE per leggere questi footer:
+
+1. I campi "Peso netto" e "Peso lordo" contengono SEMPRE pesi in KG, MAI importi.
+   Non confonderli mai con oneri economici.
+
+2. I campi "Trasporto" e "Preparazione Ordine" nel footer sono VUOTI se non
+   mostrano un importo in EUR esplicito. Una cella vuota = valore assente = null.
+   NON associare il numero della cella adiacente a questi campi.
+
+3. Un valore numerico nel footer va associato all'intestazione della sua colonna
+   ESATTA, non alla colonna più vicina a sinistra con testo.
+
+4. "Preparazione Ordine" è un onere reale SOLO se:
+   - Ha un importo EUR esplicito nella sua cella (es. "40,00 EUR" o "€ 40,00")
+   - O compare come riga separata nel corpo del documento con importo
+
+5. Valori da IGNORARE come oneri economici:
+   - Peso netto / Net weight (KG)
+   - Peso lordo / Gross weight (KG)  
+   - Tot. Pezzi / Tot. Colli (conteggi)
+   - Numero Palette (conteggi)
+
+6. CONAI: "Contributo ambientale CONAI assolto" nelle Annotazioni significa
+   che il CONAI è già incluso nel prezzo → NON estrarre come onere separato.
+   Inserire in avvertenze[]: "Contributo ambientale CONAI assolto"
+
+REGOLE PER EVITARE ERRORI JSON:
+- Il campo "note" deve essere brevissimo (max 10 parole) o null
+- NON ripetere la descrizione del prodotto nel campo note
+- Il campo "contenuto_pezzo" deve essere solo il valore e l'unità: "25 kg", "5 lt", "4x5 kg"
+  MAI frasi come "scatola contenente 4 sacchetti da 5 kg"
+- Se il documento ha più di 10 articoli, ometti il campo "note" (metti null)
+- NON usare MAI virgolette doppie (") dentro i valori di testo
+- NON usare caratteri speciali: ×, °, ², ³ → usa x, gradi, m2, m3
+
+══════════════════════════════════════════════════════
+SCHEMA JSON
+══════════════════════════════════════════════════════
+
+{
+  "fornitore": {"nome": "", "piva": ""},
+  "documento": {
+    "tipo": "conferma_ordine|fattura_proforma|offerta_vendita|proposta_ordine|ordine_vendita|restituzione",
+    "numero": "",
+    "data": "YYYY-MM-DD",
+    "resa": "",
+    "pagamento": ""
+  },
+  "oneri_generali": {
+    "trasporto_tipo": "incluso|per_um_riga|riga_separata|fisso_globale|percentuale_valore|soglia_franchigia|exw|non_specificato",
+    "trasporto_importo_fisso": null,
+    "trasporto_percentuale": null,
+    "trasporto_soglia": null,
+    "sconto_incondizionato_valore": null,
+    "altri_oneri": [
+      {"descrizione": "", "tipo": "", "importo": 0, "base_ripartizione": "valore"}
+    ]
+  },
+  "totali": {
+    "imponibile": null,
+    "totale_iva_inclusa": null,
+    "peso_kg": null
+  },
+  "articoli": [
+    {
+      "pos": 1,
+      "codice": "",
+      "descrizione": "",
+      "tipo_riga": "articolo|bancale_rendere|bancale_venduto|bancale_perdere|onere_riga|sovrapp_globale",
+      "articolo_padre_pos": null,
+      "num_pezzi_fisici": 0,
+      "um_pezzo_fisico": "sacco|secchio|latta|blocco|tanica|rotolo|scatola|blister|cartuccia|fustino|pz",
+      "contenuto_pezzo": "",
+      "um_prezzo": "kg|lt|L|TO|m2|pc|pz|mt",
+      "qty_totale_um": 0,
+      "qty_um_per_pezzo": 0,
+      "prezzo_listino_per_um": 0,
+      "sconti": [],
+      "onere_per_um_riga": 0,
+      "valore_netto_riga": null,
+      "pezzi_per_bancale": null,
+      "num_pal_ordinati": null,
+      "iva_perc": 22,
+      "note": null
+    }
+  ],
+  "avvertenze": []
+}`;
+
+        // ==========================================
+        // CALCOLO JAVASCRIPT LOGIC
+        // ==========================================
+        function calcolaCosti(data) {
+          const articoli = data.articoli.filter(a => a.tipo_riga === 'articolo');
+          const oneri = data.oneri_generali;
+
+          // Base per ripartizioni proporzionali: solo articoli principali
+          const totValore = articoli.reduce((s, a) => s + getValoreRiga(a), 0);
+
+          const risultati = articoli.map(art => {
+
+            // ═══ STEP 1: Prezzo netto per UM (sconti a cascata) ═══
+            let prezzoNettoUM = art.prezzo_listino_per_um;
+            for (const sc of art.sconti) {
+              prezzoNettoUM *= (1 - sc / 100);
+            }
+
+            // ═══ STEP 2: Contenuto per pezzo fisico ═══
+            // Fonte primaria: dal JSON. Fallback: calcolo.
+            const qpc = art.qty_um_per_pezzo
+              || (art.qty_totale_um / art.num_pezzi_fisici);
+
+            // ═══ STEP 3: Prezzo netto per pezzo ═══
+            let nettoPz;
+
+            if (oneri.trasporto_tipo === 'per_um_riga') {
+              // ATTENZIONE: con per_um_riga il "Totale" del documento
+              // spesso INCLUDE già il trasporto → NON usare valore_netto_riga
+              // per evitare doppio conteggio con Step 4.
+              // Usare SEMPRE il calcolo: prezzo_netto_UM × contenuto_pezzo
+              nettoPz = prezzoNettoUM * qpc;
+            }
+            else if (art.valore_netto_riga && art.num_pezzi_fisici > 0) {
+              // Per tutti gli altri tipi di trasporto, valore_netto_riga
+              // è la fonte più precisa (valore esatto del fornitore)
+              nettoPz = art.valore_netto_riga / art.num_pezzi_fisici;
+            }
+            else {
+              // Fallback: calcolo da prezzo e sconti
+              nettoPz = prezzoNettoUM * qpc;
+            }
+
+            // ═══ STEP 4: Onere trasporto per pezzo ═══
+            let onereTrPz = 0;
+
+            if (oneri.trasporto_tipo === 'per_um_riga' && art.onere_per_um_riga > 0) {
+              onereTrPz = art.onere_per_um_riga * qpc;
+            }
+            else if (oneri.trasporto_tipo === 'riga_separata') {
+              const righeOnere = data.articoli.filter(
+                r => r.tipo_riga === 'onere_riga' && r.articolo_padre_pos === art.pos
+              );
+              onereTrPz = righeOnere.reduce((s, r) => s + r.prezzo_listino_per_um, 0);
+            }
+            else if (oneri.trasporto_tipo === 'fisso_globale' && oneri.trasporto_importo_fisso > 0) {
+              const valRiga = getValoreRiga(art);
+              const quota = oneri.trasporto_importo_fisso * (valRiga / totValore);
+              onereTrPz = quota / art.num_pezzi_fisici;
+            }
+            else if (oneri.trasporto_tipo === 'percentuale_valore' && oneri.trasporto_percentuale > 0) {
+              const totImp = data.totali.imponibile || totValore;
+              if (!oneri.trasporto_soglia || totImp > oneri.trasporto_soglia) {
+                const onereStimato = totImp * oneri.trasporto_percentuale / 100;
+                const valRiga = getValoreRiga(art);
+                onereTrPz = onereStimato * (valRiga / totImp) / art.num_pezzi_fisici;
+              }
+            }
+
+            // ═══ STEP 5: Bancali ═══
+            let onereBancPz = 0;
+
+            // 5A: Bancali con padre esplicito
+            const bancDiretti = data.articoli.filter(r =>
+              ['bancale_venduto', 'bancale_perdere'].includes(r.tipo_riga)
+              && r.articolo_padre_pos === art.pos
+            );
+            for (const b of bancDiretti) {
+              const pzBanc = art.pezzi_per_bancale || art.num_pezzi_fisici;
+              onereBancPz += b.prezzo_listino_per_um / pzBanc;
+            }
+
+            // 5B: Bancali senza padre — distribuzione per quota PAL
+            if (bancDiretti.length === 0 && art.num_pal_ordinati > 0) {
+              const bancSenzaPadre = data.articoli.filter(r =>
+                ['bancale_venduto', 'bancale_perdere'].includes(r.tipo_riga)
+                && !r.articolo_padre_pos
+              );
+              if (bancSenzaPadre.length > 0) {
+                // Calcola il costo TOTALE reale di tutti i bancali venduti/a perdere
+                const totBancaleCost = bancSenzaPadre.reduce((s, b) => {
+                  return s + (b.valore_netto_riga || (b.num_pezzi_fisici * b.prezzo_listino_per_um));
+                }, 0);
+                // Calcola il totale PAL ordinati su TUTTI gli articoli principali
+                const totPal = articoli.reduce((s, a) => s + (a.num_pal_ordinati || 0), 0);
+                // Distribuisci in proporzione ai PAL dell'articolo corrente
+                if (totPal > 0) {
+                  onereBancPz += (totBancaleCost * (art.num_pal_ordinati / totPal)) / art.num_pezzi_fisici;
+                }
+              }
+            }
+
+            // ═══ STEP 6: Altri oneri globali (sovrapprezzi, ecc.) ═══
+            let altriOnPz = 0;
+            for (const ao of (oneri.altri_oneri || [])) {
+              if (ao.importo > 0) {
+                const valRiga = getValoreRiga(art);
+                const quota = ao.importo * (valRiga / totValore);
+                altriOnPz += quota / art.num_pezzi_fisici;
+              }
+            }
+
+            // ═══ STEP 6B: Sovrapprezzi globali da righe articolo ═══
+            // Cerca righe sovrapp_globale nell'array articoli e distribuiscile
+            // (evita doppio conteggio se già presenti in altri_oneri)
+            const sovrapRows = data.articoli.filter(r => r.tipo_riga === 'sovrapp_globale');
+            if (sovrapRows.length > 0) {
+              // Calcola quanto è già stato distribuito dallo Step 6 via altri_oneri
+              const giàDistribuito = (oneri.altri_oneri || []).reduce((s, ao) => s + (ao.importo || 0), 0);
+              // Calcola il totale dei sovrapprezzi dalle righe articolo
+              const totSovrap = sovrapRows.reduce((s, r) => {
+                return s + (r.valore_netto_riga || (r.num_pezzi_fisici * r.prezzo_listino_per_um));
+              }, 0);
+              // Distribuisci solo la differenza (evita doppio conteggio)
+              const daDist = totSovrap - giàDistribuito;
+              if (daDist > 0.01) {
+                const valRiga = getValoreRiga(art);
+                const quota = daDist * (valRiga / totValore);
+                altriOnPz += quota / art.num_pezzi_fisici;
+              }
+            }
+
+            // ═══ STEP 7: Sconto incondizionato a valore ═══
+            let scIncPz = 0;
+            if (oneri.sconto_incondizionato_valore) {
+              const valRiga = getValoreRiga(art);
+              scIncPz = oneri.sconto_incondizionato_valore
+                * (valRiga / totValore) / art.num_pezzi_fisici;
+            }
+
+            // ═══ STEP 8: Totale ═══
+            // scIncPz è uno SCONTO → va sottratto (segno negativo)
+            const onereTotPz = onereTrPz + onereBancPz + altriOnPz;
+            const costoPz = nettoPz + onereTotPz - scIncPz;
+
+            return {
+              codice: art.codice,
+              descrizione: art.descrizione,
+              um_pezzo: art.um_pezzo_fisico,
+              contenuto: art.contenuto_pezzo,
+              num_pezzi: art.num_pezzi_fisici,
+              listino_pz: art.prezzo_listino_per_um * qpc,
+              sconti: art.sconti,
+              netto_pz: nettoPz,
+              oneri_pz: onereTotPz,
+              costo_pz: costoPz,
+              tot_riga: costoPz * art.num_pezzi_fisici,
+            };
+          });
+
+          // ═══ VERIFICHE AUTOMATICHE ═══
+          const avvertenze = [...(data.avvertenze || [])];
+
+          // CHECK 1: Quadratura — SEMPRE contro IMPONIBILE, sottraendo bancali a rendere
+          const totCalc = risultati.reduce((s, r) => s + r.tot_riga, 0);
+          let totDoc = data.totali.imponibile;
+
+          // Correzione imponibile per per_um_riga:
+          // Se il trasporto è per_um_riga e l'imponibile estratto sembra essere
+          // solo il Totale Merce (senza trasporto), correggerlo automaticamente.
+          if (oneri.trasporto_tipo === 'per_um_riga') {
+            // Calcola il totale trasporto dalle righe articolo
+            const totTra = articoli.reduce((s, a) => {
+              const traUM = a.onere_per_um_riga || 0;
+              const kgTot = (a.num_pezzi_fisici || 0) * (a.qty_um_per_pezzo || 1);
+              return s + traUM * kgTot;
+            }, 0);
+
+            // Se la differenza tra totCalc e totDoc corrisponde al totale Tra.,
+            // significa che l'AI ha preso Totale Merce invece di Totale Netto
+            const diff = totCalc - totDoc;
+            if (diff > 0 && Math.abs(diff - totTra) < 2) {
+              avvertenze.push('ℹ️ Imponibile corretto da Totale Merce ('
+                + totDoc.toFixed(2) + '€) a Totale Netto ('
+                + (totDoc + totTra).toFixed(2) + '€) — trasporto Tra. incluso');
+              totDoc = totDoc + totTra;
+            }
+          }
+
+          // [Bug 10] Trasporto percentuale_valore non incluso nell'imponibile
+          // (es. Akifix: 3% sul materiale, aggiunto in fattura, non nel documento ordine)
+          if (oneri.trasporto_tipo === 'percentuale_valore' && totDoc && totDoc > 0) {
+            const perc = oneri.trasporto_percentuale || 0;
+            const soglia = oneri.trasporto_soglia || 0;
+            if (perc > 0 && (!soglia || totDoc > soglia)) {
+              const trasportoCalc = totDoc * (perc / 100);
+              const diff = totCalc - totDoc;
+              if (diff > 0 && Math.abs(diff - trasportoCalc) < totDoc * 0.005) {
+                avvertenze.push('ℹ️ Trasporto ' + perc + '% applicato'
+                  + (soglia > 0 ? ' (>soglia €' + soglia + ')' : '')
+                  + ': +€' + trasportoCalc.toFixed(2)
+                  + ' incluso nel costo/pz, non nell\'imponibile doc');
+                totDoc = totDoc + trasportoCalc;
+              }
+            }
+          }
+
+          if (totDoc && totDoc > 0) {
+            // I bancali a rendere sono nell'imponibile ma NON nei nostri costi
+            // perché sono cauzioni rimborsabili → sottrarli per quadrare
+            const totBancRendere = data.articoli
+              .filter(a => a.tipo_riga === 'bancale_rendere')
+              .reduce((s, a) => s + (a.valore_netto_riga || (a.num_pezzi_fisici * a.prezzo_listino_per_um)), 0);
+          
+            const totDocNetto = totDoc - totBancRendere;
+            const scarto = Math.abs(totCalc - totDocNetto) / totDocNetto * 100;
+          
+            if (totBancRendere > 0) {
+              avvertenze.push('ℹ️ Bancali a rendere esclusi dal calcolo: € '
+                + totBancRendere.toFixed(2) + ' (cauzione rimborsabile, presente in imponibile)');
+            }
+          
+            if (scarto > 2) {
+              avvertenze.push('❌ Scarto ' + scarto.toFixed(1) + '% — calc. '
+                + totCalc.toFixed(2) + '€ vs imponibile netto '
+                + totDocNetto.toFixed(2) + '€');
+            } else if (scarto > 0.5) {
+              avvertenze.push('⚠️ Scarto ' + scarto.toFixed(1) + '% (arrotondamenti)');
+            } else {
+              avvertenze.push('✅ Quadratura OK — scarto ' + scarto.toFixed(2) + '%');
+            }
+          }
+
+          // CHECK 2: Sanity prezzo
+          for (const r of risultati) {
+            if (r.costo_pz < 0.10 && !['pz','blister','cartuccia'].includes(r.um_pezzo)) {
+              avvertenze.push('⚠️ Prezzo anomalo ' + r.codice + ': '
+                + r.costo_pz.toFixed(2) + '€/pz — probabile errore pezzo fisico');
+            }
+          }
+
+          // CHECK 3: Coerenza pezzi × contenuto = quantità totale
+          for (const art of articoli) {
+            const qpc = art.qty_um_per_pezzo || (art.qty_totale_um / art.num_pezzi_fisici);
+            const check = art.num_pezzi_fisici * qpc;
+            const diffPct = Math.abs(check - art.qty_totale_um) / art.qty_totale_um;
+            if (diffPct > 0.01) {
+              avvertenze.push('⚠️ Verifica pezzi ' + art.codice + ': '
+                + art.num_pezzi_fisici + ' × ' + qpc.toFixed(3) + ' = '
+                + check.toFixed(3) + ', atteso ' + art.qty_totale_um
+                + ' (stessa UM? non confondere TO con kg)');
+            }
+          }
+
+          // CHECK 4: IVA confusa con sconto?
+          for (const art of articoli) {
+            for (const sc of art.sconti) {
+              if ([22, 10, 4].includes(sc) && art.iva_perc === sc) {
+                avvertenze.push('⚠️ Possibile confusione IVA/sconto: '
+                  + sc + '% su ' + art.codice + ' — verificare');
+              }
+            }
+          }
+
+          return { risultati, avvertenze, totale_calcolato: totCalc };
+        }
+
+        function getValoreRiga(art) {
+          if (art.valore_netto_riga) return art.valore_netto_riga;
+          let p = art.prezzo_listino_per_um;
+          for (const s of art.sconti) p *= (1 - s / 100);
+          return p * art.qty_totale_um;
+        }
+
+        // ==========================================
+        // APP LOGIC & UI HANDLING
+        // ==========================================
+        const modelSelect = document.getElementById('modelSelect');
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadError = document.getElementById('uploadError');
+        
+        // Views
+        const uploadView = document.getElementById('uploadView');
+        const loadingView = document.getElementById('loadingView');
+        const resultsView = document.getElementById('resultsView');
+        const loadingModelLabel = document.getElementById('loadingModelLabel');
+
+        // Load settings
+        if (localStorage.getItem('ordini_apiKey')) {
+            apiKeyInput.value = localStorage.getItem('ordini_apiKey');
+        }
+        if (localStorage.getItem('ordini_model')) {
+            modelSelect.value = localStorage.getItem('ordini_model');
+        }
+
+        modelSelect.addEventListener('change', () => {
+            localStorage.setItem('ordini_model', modelSelect.value);
+            // Optionally clear api key when changing provider? 
+            // The prompt says: "L'utente cambia chiave quando cambia provider." 
+            // For now, we just save the model.
+        });
+
+        apiKeyInput.addEventListener('change', () => {
+            localStorage.setItem('ordini_apiKey', apiKeyInput.value);
+        });
+
+        const btnTestApi = document.getElementById('btnTestApi');
+        btnTestApi.addEventListener('click', async () => {
+            const apiKey = apiKeyInput.value.trim();
+            const model = modelSelect.value;
+            
+            if (!apiKey) {
+                alert("Inserisci un'API Key prima di testare.");
+                return;
+            }
+            
+            btnTestApi.innerText = "Test in corso...";
+            btnTestApi.disabled = true;
+            
+            try {
+                const isAnthropic = model.startsWith("claude");
+                let response;
+                
+                if (isAnthropic) {
+                    response = await fetch("https://api.anthropic.com/v1/messages", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "x-api-key": apiKey,
+                            "anthropic-version": "2023-06-01",
+                            "anthropic-dangerous-direct-browser-access": "true"
+                        },
+                        body: JSON.stringify({
+                            model: model,
+                            max_tokens: 10,
+                            messages: [{ role: "user", content: "ping" }]
+                        })
+                    });
+                } else {
+                    response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: "ping" }] }]
+                        })
+                    });
+                }
+                
+                if (response.ok) {
+                    btnTestApi.innerText = "API OK ✅";
+                    btnTestApi.style.color = "var(--green)";
+                    btnTestApi.style.borderColor = "var(--green)";
+                } else {
+                    const err = await response.json();
+                    console.error(err);
+                    btnTestApi.innerText = "Errore ❌";
+                    btnTestApi.style.color = "var(--red)";
+                    btnTestApi.style.borderColor = "var(--red-border)";
+                    alert("Errore API: " + (err.error?.message || JSON.stringify(err)));
+                }
+            } catch (e) {
+                console.error(e);
+                btnTestApi.innerText = "Errore Rete ❌";
+                btnTestApi.style.color = "var(--red)";
+                btnTestApi.style.borderColor = "var(--red-border)";
+                alert("Errore di connessione: " + e.message);
+            }
+            
+            setTimeout(() => {
+                btnTestApi.innerText = "Test API";
+                btnTestApi.style.color = "";
+                btnTestApi.style.borderColor = "";
+                btnTestApi.disabled = false;
+            }, 3000);
+        });
+
+        // Drag & Drop
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) handleFile(fileInput.files[0]);
+        });
+        
+        document.getElementById('btnNuovo').addEventListener('click', () => {
+            showView('upload');
+            fileInput.value = '';
+        });
+
+        // ---- Export & Firebase listeners ----
+        document.getElementById('btnExcel').addEventListener('click', () => {
+            if (!_currentCalcResult) { alert('Nessun ordine analizzato.'); return; }
+            esportaExcel();
+        });
+
+        document.getElementById('btnStampa').addEventListener('click', () => {
+            if (!_currentCalcResult) { alert('Nessun ordine analizzato.'); return; }
+            window.print();
+        });
+
+        document.getElementById('btnSalva').addEventListener('click', () => {
+            if (!_currentCalcResult) { alert('Nessun ordine analizzato.'); return; }
+            salvaOrdineFirebase();
+        });
+
+        document.getElementById('btnStorico').addEventListener('click', () => {
+            showView('storico');
+            caricaStorico();
+        });
+
+        document.getElementById('btnStoricoUpload').addEventListener('click', () => {
+            showView('storico');
+            caricaStorico();
+        });
+
+        document.getElementById('btnChiudiStorico').addEventListener('click', () => {
+            if (_currentCalcResult) {
+                showView('results');
+            } else {
+                showView('upload');
+            }
+        });
+
+        // Ricerca storico con debounce
+        let _storicoSearchTimer = null;
+        document.getElementById('storicoSearch').addEventListener('input', (e) => {
+            clearTimeout(_storicoSearchTimer);
+            _storicoSearchTimer = setTimeout(() => caricaStorico(e.target.value), 350);
+        });
+
+        function showView(viewName) {
+            uploadView.classList.remove('active');
+            loadingView.classList.remove('active');
+            resultsView.classList.remove('active');
+            document.getElementById('storicoView').classList.remove('active');
+            uploadError.style.display = 'none';
+            
+            if (viewName === 'upload')   uploadView.classList.add('active');
+            if (viewName === 'loading')  loadingView.classList.add('active');
+            if (viewName === 'results')  resultsView.classList.add('active');
+            if (viewName === 'storico')  document.getElementById('storicoView').classList.add('active');
+        }
+
+        async function handleFile(file) {
+            if (file.type !== 'application/pdf') {
+                uploadError.innerText = "Per favore carica un file PDF.";
+                uploadError.style.display = 'block';
+                return;
+            }
+
+            const apiKey = apiKeyInput.value.trim();
+            if (!apiKey) {
+                uploadError.innerText = "Inserisci l'API Key prima di continuare.";
+                uploadError.style.display = 'block';
+                return;
+            }
+
+            const model = modelSelect.value;
+            loadingModelLabel.innerText = modelSelect.options[modelSelect.selectedIndex].text;
+            showView('loading');
+
+            try {
+                const base64Data = await readAsBase64(file);
+                const jsonResult = await processDocument(base64Data, model, apiKey);
+                const calcResult = calcolaCosti(jsonResult);
+                
+                renderResults(calcResult, jsonResult);
+                showView('results');
+            } catch (err) {
+                console.error(err);
+                showView('upload');
+                uploadError.innerText = "Errore durante l'analisi: " + err.message;
+                uploadError.style.display = 'block';
+            }
+        }
+
+        function readAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const result = reader.result;
+                    const base64 = result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function extractJson(text) {
+            let jsonStr = text.trim();
+            
+            // Rimuovi eventuale markdown fencing
+            const match = jsonStr.match(/```(?:json)?([\s\S]*?)```/);
+            if (match) {
+                jsonStr = match[1].trim();
+            } else {
+                const startIdx = jsonStr.indexOf('{');
+                const endIdx = jsonStr.lastIndexOf('}');
+                if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+                    jsonStr = jsonStr.substring(startIdx, endIdx + 1);
+                }
+            }
+
+            // === RIPARAZIONI JSON ===
+
+            // Fix 1: Rimuovi caratteri di controllo invisibili (BOM, zero-width, etc.)
+            jsonStr = jsonStr.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f\ufeff]/g, '');
+
+            // Fix 2: Escape virgolette doppie DENTRO i valori stringa
+            // Trova pattern: "chiave": "valore con "parola" dentro"
+            // e sostituisci le virgolette interne con apici singoli
+            jsonStr = jsonStr.replace(/"([^"]*?)"\s*:\s*"((?:[^"\\]|\\.)*)"/g, (match) => {
+                // Questa regex è sicura, non modifica il JSON valido
+                return match;
+            });
+
+            // Fix 3: Rimuovi virgole trailing prima di } o ]
+            jsonStr = jsonStr.replace(/,\s*([\]}])/g, '$1');
+
+            // Fix 4: Aggiungi virgole mancanti tra oggetti in array
+            jsonStr = jsonStr.replace(/\}\s*\{/g, '}, {');
+
+            // Fix 5: Chiudi array e oggetto se il JSON è troncato
+            // Conta le parentesi aperte/chiuse
+            let openBraces = 0, openBrackets = 0;
+            let inString = false, escape = false;
+            for (let i = 0; i < jsonStr.length; i++) {
+                const c = jsonStr[i];
+                if (escape) { escape = false; continue; }
+                if (c === '\\') { escape = true; continue; }
+                if (c === '"') { inString = !inString; continue; }
+                if (inString) continue;
+                if (c === '{') openBraces++;
+                if (c === '}') openBraces--;
+                if (c === '[') openBrackets++;
+                if (c === ']') openBrackets--;
+            }
+            // Se ci sono parentesi non chiuse, il JSON è stato troncato
+            if (openBraces > 0 || openBrackets > 0) {
+                // Rimuovi l'ultimo valore parziale (potrebbe essere un campo troncato)
+                jsonStr = jsonStr.replace(/,\s*"[^"]*"?\s*:?\s*[^,}\]]*$/, '');
+                // Chiudi le parentesi mancanti
+                for (let i = 0; i < openBrackets; i++) jsonStr += ']';
+                for (let i = 0; i < openBraces; i++) jsonStr += '}';
+            }
+
+            // Fix 6: virgola mancante prima di "avvertenze"
+            jsonStr = jsonStr.replace(/\]\s*"avvertenze"/g, '],\n"avvertenze"');
+            jsonStr = jsonStr.replace(/\}\s*"avvertenze"/g, '}],\n"avvertenze"');
+
+            try {
+                return JSON.parse(jsonStr);
+            } catch (e) {
+                // Tentativo finale: riparazione aggressiva delle stringhe
+                // Cerca virgolette non escapate dentro valori stringa
+                try {
+                    const repaired = jsonStr.replace(
+                        /:\s*"([^"]*)"/g, 
+                        (m, val) => ': "' + val.replace(/(?<!\\)"/g, "'") + '"'
+                    );
+                    return JSON.parse(repaired);
+                } catch (e2) {
+                    // Mostra contesto dell'errore per debug
+                    const posMatch = e.message.match(/position (\d+)/);
+                    if (posMatch) {
+                        const pos = parseInt(posMatch[1], 10);
+                        const start = Math.max(0, pos - 80);
+                        const end = Math.min(jsonStr.length, pos + 80);
+                        const snippet = jsonStr.substring(start, end);
+                        const pointer = ' '.repeat(Math.max(0, pos - start)) + '^^^';
+                        throw new Error(e.message 
+                            + "\n\n📋 CONTESTO ERRORE JSON (pos " + pos + "):\n..." 
+                            + snippet + "...\n" + pointer);
+                    }
+                    throw e;
+                }
+            }
+        }
+
+        async function processDocument(base64Data, model, apiKey) {
+            const isAnthropic = model.startsWith("claude");
+            
+            if (isAnthropic) {
+                const response = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-api-key": apiKey,
+                        "anthropic-version": "2023-06-01",
+                        "anthropic-beta": "pdfs-2024-09-25",
+                        "anthropic-dangerous-direct-browser-access": "true"
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        max_tokens: 16384,
+                        system: SYSTEM_PROMPT,
+                        messages: [
+                            {
+                                role: "user",
+                                content: [
+                                    {
+                                        type: "document",
+                                        source: {
+                                            type: "base64",
+                                            media_type: "application/pdf",
+                                            data: base64Data
+                                        }
+                                    },
+                                    {
+                                        type: "text",
+                                        text: "Estrai i dati da questo PDF secondo le istruzioni. Restituisci SOLO un oggetto JSON valido, senza testo o markdown."
+                                    }
+                                ]
+                            }
+                        ]
+                    })
+                });
+                
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error?.message || "Errore API Anthropic");
+                }
+                const result = await response.json();
+                return extractJson(result.content[0].text);
+            } else {
+                // Gemini
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        systemInstruction: {
+                            parts: [{ text: SYSTEM_PROMPT }]
+                        },
+                        generationConfig: {
+                            responseMimeType: "application/json"
+                        },
+                        contents: [
+                            {
+                                parts: [
+                                    {
+                                        inlineData: {
+                                            mimeType: "application/pdf",
+                                            data: base64Data
+                                        }
+                                    },
+                                    {
+                                        text: "Estrai i dati da questo PDF secondo le istruzioni. Restituisci SOLO un oggetto JSON valido, senza testo o markdown."
+                                    }
+                                ]
+                            }
+                        ]
+                    })
+                });
+                
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error?.message || "Errore API Gemini");
+                }
+                const result = await response.json();
+                return extractJson(result.candidates[0].content.parts[0].text);
+            }
+        }
+
+        // ==========================================
+        // RENDER UI
+        // ==========================================
+        function renderResults(calcResult, dataJSON) {
+            // Salva stato corrente per export/Firebase
+            _currentCalcResult = calcResult;
+            _currentDataJSON   = dataJSON;
+            // Reset badge Firebase
+            const badge = document.getElementById('firebaseBadge');
+            if (badge) {
+                badge.style.display = 'none';
+                badge.className = 'firebase-badge';
+                badge.textContent = '';
+            }
+
+            const tbody = document.querySelector("#resultsTable tbody");
+            tbody.innerHTML = "";
+            
+            const formatCurrency = (val) => {
+                if (val === null || val === undefined) return "—";
+                if (val === 0) return "—";
+                return "€ " + val.toFixed(2);
+            };
+            
+            calcResult.risultati.forEach(r => {
+                const tr = document.createElement("tr");
+                
+                const scontiTxt = r.sconti && r.sconti.length ? r.sconti.map(s => s+"%").join(" + ") : "—";
+                const art = dataJSON.articoli.find(a => a.codice === r.codice && a.descrizione === r.descrizione) || {};
+                const listinoUM = art.prezzo_listino_per_um ? `${art.prezzo_listino_per_um.toFixed(2)} / ${art.um_prezzo}` : "";
+                
+                tr.innerHTML = `
+                    <td class="td-mono-left">${r.codice || ''}</td>
+                    <td>
+                        ${r.descrizione || ''}
+                        <span class="text-small">${r.um_pezzo || ''} da ${r.contenuto || ''}</span>
+                    </td>
+                    <td class="td-mono">${r.num_pezzi || 0} ${r.um_pezzo || ''}</td>
+                    <td class="td-mono">${r.contenuto || ''}</td>
+                    <td class="td-mono">
+                        ${formatCurrency(r.listino_pz)}
+                        <span class="text-small">${listinoUM}</span>
+                    </td>
+                    <td class="td-mono">${scontiTxt}</td>
+                    <td class="td-mono">${formatCurrency(r.netto_pz)}</td>
+                    <td class="td-mono">${formatCurrency(r.oneri_pz)}</td>
+                    <td class="td-mono text-highlight">${formatCurrency(r.costo_pz)}</td>
+                    <td class="td-mono">${formatCurrency(r.tot_riga)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            // Oneri Summary
+            const oneri = dataJSON.oneri_generali || {};
+            const oneriDiv = document.getElementById("oneriSummary");
+            let oneriHtml = `<ul style="list-style:none; padding:0; margin:0; font-size: 13px; color: var(--text);">`;
+            
+            const doc = dataJSON.documento || {};
+            const docStr = `${doc.tipo || 'Doc'} n. ${doc.numero || ''} del ${doc.data || ''}`;
+            const forn = dataJSON.fornitore || {};
+            oneriHtml += `<li style="margin-bottom: 12px; color: var(--text2);">
+                <strong style="color: var(--text);">Fornitore:</strong> ${forn.nome || ''} ${forn.piva ? '('+forn.piva+')' : ''}<br>
+                <strong style="color: var(--text);">Documento:</strong> ${docStr}
+            </li>`;
+            
+            oneriHtml += `<li style="margin-bottom: 6px;"><strong>Trasporto:</strong> ${oneri.trasporto_tipo || 'non_specificato'} ` + 
+              (oneri.trasporto_importo_fisso ? `(€ ${oneri.trasporto_importo_fisso.toFixed(2)})` : '') + 
+              (oneri.trasporto_percentuale ? `(${oneri.trasporto_percentuale}%)` : '') + `</li>`;
+              
+            if (oneri.sconto_incondizionato_valore) {
+               oneriHtml += `<li style="margin-bottom: 6px;"><strong>Sconto Incondizionato:</strong> € ${oneri.sconto_incondizionato_valore.toFixed(2)}</li>`;
+            }
+            
+            if (oneri.altri_oneri && oneri.altri_oneri.length) {
+               oneri.altri_oneri.forEach(o => {
+                 oneriHtml += `<li style="margin-bottom: 6px;"><strong>Altro (${o.tipo}):</strong> € ${o.importo.toFixed(2)} (${o.descrizione})</li>`;
+               });
+            }
+            
+            oneriHtml += `<li style="margin-top: 12px; font-weight: bold;">Totale Imponibile Documento: ${formatCurrency(dataJSON.totali?.imponibile)}</li>`;
+            oneriHtml += `<li style="font-weight: bold; color: var(--accent);">Totale Calcolato: ${formatCurrency(calcResult.totale_calcolato)}</li>`;
+            oneriHtml += `</ul>`;
+            oneriDiv.innerHTML = oneriHtml;
+            
+            // Warnings List
+            const warnDiv = document.getElementById("warningsList");
+            let warnHtml = "";
+            if (calcResult.avvertenze && calcResult.avvertenze.length > 0) {
+              warnHtml += `<ul style="color: var(--orange); list-style: none; padding: 0; margin: 0; font-size: 13px;">`;
+              calcResult.avvertenze.forEach(w => {
+                let color = "var(--orange)";
+                if (w.includes("❌")) color = "var(--red)";
+                if (w.includes("✅")) color = "var(--green)";
+                warnHtml += `<li style="color: ${color}; margin-bottom: 8px; line-height: 1.4;">${w}</li>`;
+              });
+              warnHtml += `</ul>`;
+            } else {
+              warnHtml += `<p style="color: var(--green); margin: 0; font-size: 13px;">✅ Nessuna avvertenza. Dati calcolati coerenti.</p>`;
+            }
+            warnDiv.innerHTML = warnHtml;
+        }
+
+        // ==========================================
+        // EXPORT EXCEL
+        // ==========================================
+        function esportaExcel() {
+            if (!_currentCalcResult || !_currentDataJSON) return;
+
+            const doc  = _currentDataJSON.documento  || {};
+            const forn = _currentDataJSON.fornitore   || {};
+            const oneri = _currentDataJSON.oneri_generali || {};
+
+            // ---- Foglio 1: Articoli ----
+            const righeArticoli = _currentCalcResult.risultati.map(r => ({
+                'Codice':        r.codice       || '',
+                'Descrizione':   r.descrizione  || '',
+                'Qtà':           r.num_pezzi    || 0,
+                'UM Pezzo':      r.um_pezzo     || '',
+                'Contenuto/Pz':  r.contenuto    || '',
+                'Listino/Pz €':  +(r.listino_pz  || 0).toFixed(4),
+                'Sconti':        (r.sconti || []).map(s => s + '%').join(' + ') || '—',
+                'Netto/Pz €':    +(r.netto_pz   || 0).toFixed(4),
+                'Oneri/Pz €':    +(r.oneri_pz   || 0).toFixed(4),
+                'Costo/Pz €':    +(r.costo_pz   || 0).toFixed(4),
+                'Tot. Riga €':   +(r.tot_riga   || 0).toFixed(2),
+            }));
+
+            // ---- Foglio 2: Riepilogo ----
+            const righeRiepilogo = [
+                ['Fornitore',          forn.nome || ''],
+                ['P.IVA Fornitore',    forn.piva || ''],
+                ['Tipo Documento',     doc.tipo  || ''],
+                ['Numero Documento',   doc.numero || ''],
+                ['Data Documento',     doc.data  || ''],
+                ['Resa',               doc.resa  || ''],
+                ['Pagamento',          doc.pagamento || ''],
+                [],
+                ['Trasporto Tipo',     oneri.trasporto_tipo || ''],
+                ['Trasporto Importo',  oneri.trasporto_importo_fisso || ''],
+                ['Trasporto %',        oneri.trasporto_percentuale || ''],
+                ['Trasporto Soglia',   oneri.trasporto_soglia || ''],
+                [],
+                ['Imponibile Documento €', _currentDataJSON.totali?.imponibile || ''],
+                ['Totale Calcolato €',     +(_currentCalcResult.totale_calcolato || 0).toFixed(2)],
+                [],
+                ['AVVERTENZE', ''],
+                ...(_currentCalcResult.avvertenze || []).map(a => ['', a]),
+            ];
+
+            const wb = XLSX.utils.book_new();
+
+            // Foglio articoli
+            const wsArt = XLSX.utils.json_to_sheet(righeArticoli);
+            // Larghezze colonne
+            wsArt['!cols'] = [
+                {wch:14},{wch:45},{wch:8},{wch:10},{wch:12},
+                {wch:12},{wch:16},{wch:12},{wch:12},{wch:12},{wch:12}
+            ];
+            XLSX.utils.book_append_sheet(wb, wsArt, 'Articoli');
+
+            // Foglio riepilogo
+            const wsRiep = XLSX.utils.aoa_to_sheet(righeRiepilogo);
+            wsRiep['!cols'] = [{wch:28},{wch:40}];
+            XLSX.utils.book_append_sheet(wb, wsRiep, 'Riepilogo');
+
+            // Nome file: fornitore_numeroDoc_data.xlsx
+            const safeName = (s) => (s || '').replace(/[^a-zA-Z0-9_\-]/g, '_').substring(0, 30);
+            const fileName = `${safeName(forn.nome)}_${safeName(doc.numero)}_${doc.data || 'data'}.xlsx`;
+
+            XLSX.writeFile(wb, fileName);
+        }
+
+        // ==========================================
+        // FIREBASE SAVE & STORICO
+        // ==========================================
+        async function salvaOrdineFirebase() {
+            if (!_currentCalcResult || !_currentDataJSON) return;
+
+            const doc  = _currentDataJSON.documento  || {};
+            const forn = _currentDataJSON.fornitore   || {};
+
+            // Conferma esplicita utente
+            const label = `${forn.nome || 'Fornitore'} — ${doc.tipo || 'Doc'} n. ${doc.numero || '?'} del ${doc.data || '?'}`;
+            const confermato = confirm(
+                `Salvare su Firebase il seguente ordine?\n\n${label}\n\nTotale calcolato: € ${(_currentCalcResult.totale_calcolato || 0).toFixed(2)}`
+            );
+            if (!confermato) return;
+
+            // Mostra badge "Salvataggio..."
+            const badge = document.getElementById('firebaseBadge');
+            badge.style.display = 'inline-flex';
+            badge.className = 'firebase-badge saving';
+            badge.textContent = '⏳ Salvataggio...';
+
+            try {
+                // Struttura documento Firestore
+                const ordineDoc = {
+                    timestamp:          firebase.firestore.FieldValue.serverTimestamp(),
+                    fornitore:          forn,
+                    documento:          doc,
+                    oneri_generali:     _currentDataJSON.oneri_generali || {},
+                    totale_calcolato:   +(_currentCalcResult.totale_calcolato || 0).toFixed(2),
+                    imponibile_doc:     _currentDataJSON.totali?.imponibile || null,
+                    avvertenze:         _currentCalcResult.avvertenze || [],
+                    articoli_calcolati: _currentCalcResult.risultati.map(r => ({
+                        codice:       r.codice       || '',
+                        descrizione:  r.descrizione  || '',
+                        um_pezzo:     r.um_pezzo     || '',
+                        contenuto:    r.contenuto    || '',
+                        num_pezzi:    r.num_pezzi    || 0,
+                        listino_pz:   +(r.listino_pz  || 0).toFixed(4),
+                        sconti:       r.sconti       || [],
+                        netto_pz:     +(r.netto_pz   || 0).toFixed(4),
+                        oneri_pz:     +(r.oneri_pz   || 0).toFixed(4),
+                        costo_pz:     +(r.costo_pz   || 0).toFixed(4),
+                        tot_riga:     +(r.tot_riga   || 0).toFixed(2),
+                    })),
+                    // Token per ricerca testuale
+                    search_tokens: [
+                        forn.nome, forn.piva, doc.tipo, doc.numero, doc.data
+                    ].filter(Boolean).join(' ').toLowerCase(),
+                    // JSON grezzo per eventuale ri-elaborazione futura
+                    json_raw: _currentDataJSON,
+                };
+
+                const docRef = await db.collection('ordini_analizzati').add(ordineDoc);
+
+                badge.className = 'firebase-badge saved';
+                badge.textContent = '✅ Salvato';
+                console.log('Ordine salvato con ID:', docRef.id);
+
+            } catch (err) {
+                console.error('Errore Firebase:', err);
+                badge.className = 'firebase-badge error';
+                badge.textContent = '❌ Errore salvataggio';
+                alert('Errore durante il salvataggio: ' + err.message);
+            }
+        }
+
+        // ---- Carica e mostra storico ----
+        async function caricaStorico(filtro = '') {
+            const listDiv = document.getElementById('storicoList');
+            listDiv.innerHTML = '<div class="storico-empty">Caricamento...</div>';
+
+            try {
+                let query = db.collection('ordini_analizzati')
+                    .orderBy('timestamp', 'desc')
+                    .limit(50);
+
+                const snapshot = await query.get();
+
+                if (snapshot.empty) {
+                    listDiv.innerHTML = '<div class="storico-empty">Nessun ordine salvato.</div>';
+                    return;
+                }
+
+                const docs = [];
+                snapshot.forEach(d => docs.push({ id: d.id, ...d.data() }));
+
+                // Filtra in memoria se c'è un termine di ricerca
+                const filtrati = filtro.trim()
+                    ? docs.filter(d => (d.search_tokens || '').includes(filtro.toLowerCase()))
+                    : docs;
+
+                if (filtrati.length === 0) {
+                    listDiv.innerHTML = '<div class="storico-empty">Nessun risultato per "' + filtro + '".</div>';
+                    return;
+                }
+
+                listDiv.innerHTML = filtrati.map(d => {
+                    const ts = d.timestamp?.toDate ? d.timestamp.toDate().toLocaleDateString('it-IT') : '—';
+                    const forn = d.fornitore?.nome || 'Fornitore sconosciuto';
+                    const docN = d.documento ? `${d.documento.tipo || 'Doc'} n. ${d.documento.numero || '?'} del ${d.documento.data || '?'}` : '';
+                    const tot  = d.totale_calcolato != null ? '€ ' + d.totale_calcolato.toFixed(2) : '—';
+                    const nArt = (d.articoli_calcolati || []).length;
+                    return `
+                      <div class="storico-card" data-id="${d.id}">
+                        <div class="storico-card-info">
+                          <div class="storico-card-title">${forn}</div>
+                          <div class="storico-card-meta">${docN} &nbsp;·&nbsp; ${nArt} articoli &nbsp;·&nbsp; Salvato il ${ts}</div>
+                        </div>
+                        <div class="storico-card-total" style="flex: 1; text-align: right; margin-right: 20px;">${tot}</div>
+                        <button class="btn btn-secondary delete-btn" data-id="${d.id}" title="Elimina documento" style="padding: 6px 10px; color: var(--red); border-color: var(--red-border); background: var(--red-bg);">🗑️</button>
+                      </div>`;
+                }).join('');
+
+                // Click su card → carica ordine nei risultati
+                listDiv.querySelectorAll('.storico-card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        if (e.target.closest('.delete-btn')) {
+                            e.stopPropagation();
+                            eliminaOrdine(card.dataset.id);
+                            return;
+                        }
+                        const id = card.dataset.id;
+                        const ordine = filtrati.find(d => d.id === id);
+                        if (!ordine) return;
+                        caricaOrdineDaStorico(ordine);
+                    });
+                });
+
+            } catch (err) {
+                console.error("Errore caricamento storico:", err);
+                listDiv.innerHTML = '<div class="storico-empty" style="color:var(--red)">Errore caricamento: ' + err.message + '</div>';
+            }
+        }
+
+        async function eliminaOrdine(id) {
+            if (!confirm("Sei sicuro di voler eliminare questo documento dallo storico? L'operazione è irreversibile.")) {
+                return;
+            }
+            try {
+                await db.collection('ordini_analizzati').doc(id).delete();
+                caricaStorico(document.getElementById('storicoSearch').value);
+            } catch (err) {
+                console.error("Errore durante l'eliminazione:", err);
+                alert("Errore durante l'eliminazione: " + err.message);
+            }
+        }
+
+        function caricaOrdineDaStorico(ordine) {
+            // Ricostruisce un calcResult fittizio dagli articoli_calcolati salvati
+            const calcResult = {
+                risultati:        ordine.articoli_calcolati || [],
+                avvertenze:       ordine.avvertenze || [],
+                totale_calcolato: ordine.totale_calcolato || 0,
+            };
+            // Usa json_raw se disponibile, altrimenti ricostruisce il minimo
+            const dataJSON = ordine.json_raw || {
+                fornitore:       ordine.fornitore || {},
+                documento:       ordine.documento || {},
+                oneri_generali:  ordine.oneri_generali || {},
+                totali:          { imponibile: ordine.imponibile_doc },
+                articoli:        [],
+                avvertenze:      [],
+            };
+
+            renderResults(calcResult, dataJSON);
+            showView('results');
+
+            // Badge "Caricato da storico"
+            const badge = document.getElementById('firebaseBadge');
+            badge.style.display = 'inline-flex';
+            badge.className = 'firebase-badge saved';
+            badge.textContent = '📋 Da storico';
+        }
+
+    </script>
+</body>
+</html>
