@@ -598,6 +598,114 @@ Come riconoscere un isolante: cercare nel codice o nella descrizione queste paro
   pannello acustico, fonoassorbente, fonoisolante, Silence, Acoustic,
   MINERAL WOOL, ROCK WOOL, Styrodur, Neopor, Stiferite, Europlus
 
+ECCEZIONE LECA/ARGILLA ESPANSA LATERLITE:
+Per i prodotti Laterlite ordinati in Metri Cubi (MC), la UM commerciale
+del magazzino è il SACCO. Convertire sempre da MC a sacchi usando la
+tabella di conversione seguente.
+
+Quando il documento riporta un articolo LECA/Lecamix/Massettomix
+con UM = MC o m3:
+  num_pezzi_fisici  = qty_mc × sacchi_per_m3   (dalla tabella)
+  um_pezzo_fisico   = "sacco"
+  qty_um_per_pezzo  = 1 / sacchi_per_m3         (m3 per sacco, es. 0.05 per LECA 8/20)
+  contenuto_pezzo   = litri_per_sacco + " L"    (es. "50 L")
+  prezzo_listino_per_um = prezzo_€_per_mc (invariato — il calcolo penserà a convertire)
+  um_prezzo         = "MC" (invariato)
+
+  NOTA: il prezzo_listino rimane in €/MC. Il calcolo JS applica:
+    listino_pz = prezzo_mc × qty_um_per_pezzo
+    netto_pz   = listino_pz × (1 - sconti)
+
+Tabella sacchi_per_m3 per codice:
+  LAAS110330, LAAS120360, LAAS140375, LAAS140650,
+  LAAS160375, LAAS160650 → 20 sacchi/m3, 50 L/sacco
+  
+  LPCL010556, LPCL010756, LPCL210348, LPCL210748 → 40 sacchi/m3, 25 L/sacco
+  LPCL310356, LPCL310756 → 51 sacchi/m3, 19.6 L/sacco
+  
+  LPMS211084 → 62.5 sacchi/m3, 16 L/sacco
+  LPMS311060, LPMS011060, LPMS311460 → 31.25 sacchi/m3, 32 L/sacco
+  
+  LPMS402064, LPMS401560, LPMS502160, LPMS502064 → 64 sacchi/bancale (25 kg/sacco)
+  LPMS401060, LPMS401130, LPMS502130 → 60 o 30 sacchi/bancale (25 kg/sacco)
+  
+  Prodotti sfusi (LECA CEM, sottofondo, calcestruzzi leggeri) — UM = MC:
+    LPSO810360  Leca Cem Classic mc 3,00/b  → 20 sacchi/m3, 50 L/sacco
+    LPSO810260  Leca Cem Classic mc 2,00/b  → 20 sacchi/m3, 50 L/sacco
+    LPSO510398  Sottofondo CentroStorico    → 40 sacchi/m3, 25 L/sacco
+    LPCL110384  Calcestruzzo CentroStorico  → 62.5 sacchi/m3, 16 L/sacco
+    LPMS150384  Massetto CentroStorico      → 62.5 sacchi/m3, 16 L/sacco
+    LPCL411360                              → 40 sacchi/m3, 25 L/sacco
+
+Esempio LAAS160375 (Leca 8/20), ordine 3.75 MC a €185/MC sconto 50+5:
+  sacchi_per_m3     = 20
+  num_pezzi_fisici  = 3.75 × 20 = 75 sacchi
+  qty_um_per_pezzo  = 0.05 m3/sacco
+  contenuto_pezzo   = "50 L"
+  prezzo_listino_per_um = 185.00 (€/MC)
+  → listino_pz = 185 × 0.05 = 9.25 €/sacco
+  → netto_pz   = 9.25 × 0.50 × 0.95 = 4.394 €/sacco
+  → tot_riga   = 4.394 × 75 = 329.53€ ✓
+
+PRODOTTI LATERLITE IN TONNELLATE (UM = TN):
+Alcuni prodotti Laterlite (es. UltraSlim, massetti sfusi) vengono
+ordinati in tonnellate (TN). Applicare la stessa logica di conversione
+usando sacchi_per_TN al posto di sacchi_per_m3:
+
+  num_pezzi_fisici  = qty_TN × sacchi_per_TN
+  um_pezzo_fisico   = "sacco"
+  qty_um_per_pezzo  = 1 / sacchi_per_TN  (TN per sacco)
+  prezzo_listino_per_um = prezzo €/TN (invariato)
+  um_prezzo         = "TN"
+
+Tabella sacchi_per_TN per prodotti in TN:
+  LPMS401130  UltraSlim tn 0,75/b       → 40 sacchi/TN, 25 kg/sacco
+  LPMS401560  PaRis fluid tn/b          → 40 sacchi/TN, 25 kg/sacco
+  LPMS402064  Massettomix PaRis 2.0     → 40 sacchi/TN, 25 kg/sacco
+  LPMS502160  Quota Zero (grande)       → 40 sacchi/TN, 25 kg/sacco
+
+Esempio LPMS401130 UltraSlim (0,75 TN, €872/TN, sconto 50+5):
+  sacchi_per_TN     = 40
+  num_pezzi_fisici  = 0.75 × 40 = 30 sacchi
+  qty_um_per_pezzo  = 0.025 TN/sacco
+  contenuto_pezzo   = "25 kg"
+  prezzo_listino_per_um = 872.00 (€/TN)
+  → listino_pz = 872 × 0.025 = 21.80 €/sacco
+  → netto_pz   = 21.80 × 0.50 × 0.95 = 10.355 €/sacco
+  → tot_riga   = 10.355 × 30 = 310.65€ ✓
+
+NOTA ONERI RIGA per prodotti in TN:
+Stessa regola del Bug 13C — usare valore_netto_riga totale
+diviso per num_pezzi_fisici (sacchi), NON il prezzo €/TN.
+Esempio UltraSlim: Addebito Spese Trasporto totale 6,00€ / 30 sacchi = 0,20 €/sacco
+
+REGOLA LATERLITE PRODOTTI SECCHI (malte, calcestruzzi, sabbie):
+Per i prodotti Laterlite con UM = SC (sacco), il peso per sacco è SEMPRE 25 kg,
+indipendentemente da qualsiasi numero che appare nel nome del prodotto.
+
+Il numero dopo il trattino nel nome (es. "- 50 sacchi", "- 100 sacchi")
+indica i SACCHI PER BANCALE, non il peso del sacco.
+
+Regola:
+  Se UM = SC e fornitore = Laterlite:
+    contenuto_pezzo = "25 kg"
+    qty_um_per_pezzo = 25  (kg per sacco)
+    um_prezzo = "SC"  (il prezzo è già per sacco)
+
+Prodotti tipici con questo schema:
+  GDMS040050  SUPER SABBIA CEMENTO FIBRORIN. - 50 sacchi  → 25 kg/sacco
+  GDCL050050  CALCESTRUZZO FIBRATO - 50 sacchi            → 25 kg/sacco
+  GDMA020050  MALTA BASTARDA FIBRORINF - 50 sacchi        → 25 kg/sacco
+  GDCL055050  BETONRAPID FIBRATO                          → 25 kg/sacco
+  GDMS040030  SUPER SABBIA CEMENTO FIBRORIN. - 30 sacchi  → 25 kg/sacco
+  GDMA020030  MALTA BASTARDA FIBRORINF - 30 sacchi        → 25 kg/sacco
+  
+  Regola generale confermata: qualsiasi prodotto Laterlite con UM=SC
+  ha sempre contenuto_pezzo = "25 kg", indipendentemente dal numero
+  nel nome (30 o 50 indicano sacchi/bancale, non kg/sacco).
+  Fare eccezione SOLO se la descrizione indica esplicitamente un peso diverso
+  (es. "sacco da 50 kg" scritto in modo inequivocabile).
+
 ══════════════════════════════════════════════════════
 REGOLA 2 — PATTERN DA RICONOSCERE NEL NOME ARTICOLO
 ══════════════════════════════════════════════════════
@@ -752,6 +860,13 @@ RIGHE NON-ARTICOLO:
   
   "Addebito Spese Trasporto" → onere_riga
     Associare all'articolo precedente (articolo_padre_pos).
+  
+  "Addebito Spese Deposito" / "Spese Deposito" → onere_riga
+    Trattare esattamente come "Addebito Spese Trasporto":
+    tipo_riga = "onere_riga"
+    articolo_padre_pos = pos dell'articolo precedente
+    Aggiungere al trasporto dell'articolo padre (Step 4/5A nel calcolo).
+    Tipico dei prodotti LECA Laterlite (argilla espansa sfusa).
   
   "Sovrapprezzo Carburante" e simili → sovrapp_globale
     Inserire sia in articoli[] (tipo_riga: "sovrapp_globale")
@@ -920,10 +1035,26 @@ SCHEMA JSON
               onereTrPz = art.onere_per_um_riga * qpc;
             }
             else if (oneri.trasporto_tipo === 'riga_separata') {
-              const righeOnere = data.articoli.filter(
-                r => r.tipo_riga === 'onere_riga' && r.articolo_padre_pos === art.pos
+              // BUG 13C FIX: usare SEMPRE valore_netto_riga (totale €) diviso
+              // per num_pezzi_fisici dell'articolo padre.
+              // Questo evita il mismatch di unità (€/MC vs €/sacco) per prodotti
+              // come LECA che vengono convertiti da MC a sacchi nel JSON.
+              // Sommare TUTTE le righe onere figlie (trasporto + deposito + altri).
+              const righeOnere = data.articoli.filter(r =>
+                r.tipo_riga === 'onere_riga'
+                && String(r.articolo_padre_pos) === String(art.pos)
               );
-              onereTrPz = righeOnere.reduce((s, r) => s + r.prezzo_listino_per_um, 0);
+              if (righeOnere.length > 0) {
+                const totOnereEur = righeOnere.reduce((s, r) => {
+                  // Fonte primaria: valore_netto_riga (importo totale della riga in €)
+                  // Fallback: prezzo × qty (solo se valore_netto_riga non disponibile
+                  //           E siamo sicuri che prezzo sia già €/pezzo)
+                  const valEur = r.valore_netto_riga
+                    || (r.prezzo_listino_per_um * (r.num_pezzi_fisici || 1));
+                  return s + valEur;
+                }, 0);
+                onereTrPz = totOnereEur / art.num_pezzi_fisici;
+              }
             }
             else if (oneri.trasporto_tipo === 'fisso_globale' && oneri.trasporto_importo_fisso > 0) {
               const valRiga = getValoreRiga(art);
