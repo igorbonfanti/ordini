@@ -337,6 +337,7 @@
             align-items: center;
             margin-bottom: 20px;
         }
+
         .storico-search {
             width: 280px;
         }
@@ -382,6 +383,24 @@
             font-size: 14px;
         }
 
+        /* ---- STORICO TABS & ARTICOLO ---- */
+        .storico-panel { display:none; flex-direction:column; flex:1; }
+        .storico-panel.active { display:flex; }
+        .storico-tab {
+            background: none; border: none; color: var(--text2);
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            padding: 8px 12px; font-family: 'DM Sans', sans-serif;
+            border-radius: var(--radius-sm); transition: all 0.2s;
+        }
+        .storico-tab:hover { color: var(--text); background: var(--surface2); }
+        .storico-tab.active { color: var(--accent); background: var(--accent-bg); }
+        .ac-item {
+            padding: 10px 14px; cursor: pointer; font-size: 13px;
+            border-bottom: 1px solid rgba(51,56,80,0.3);
+        }
+        .ac-item:last-child { border-bottom: none; }
+        .ac-item:hover { background: var(--surface3); }
+
         /* ---- PRINT STYLES ---- */
         @media print {
             .app-header, .results-toolbar, #btnNuovo,
@@ -396,6 +415,14 @@
             .summary-card h3, li, td, th { color: black !important; }
             .text-highlight { color: #1a6b2f !important; font-weight: bold; }
         }
+        /* Autofill override — impedisce sfondo bianco di Chrome */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0 1000px var(--surface) inset !important;
+            -webkit-text-fill-color: var(--text) !important;
+            caret-color: var(--text);
+        }
     </style>
     <!-- SheetJS per export Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -409,7 +436,7 @@
     <div class="app-header">
         <div class="logo">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
-            Antigravity Ordini <span style="font-size: 12px; color: var(--text3); margin-left: 8px; font-weight: normal;">v1.0.1</span>
+            Antigravity Ordini <span style="font-size: 12px; color: var(--text3); margin-left: 8px; font-weight: normal;">v1.2.2</span>
         </div>
         <div class="settings">
             <select id="modelSelect" class="input-standard">
@@ -502,12 +529,64 @@
             <div class="storico-header">
                 <h2>Storico Ordini Salvati</h2>
                 <div style="display:flex; gap:10px; align-items:center;">
-                    <input type="text" id="storicoSearch" class="input-standard storico-search" placeholder="Cerca fornitore, numero doc...">
                     <button class="btn btn-secondary" id="btnChiudiStorico">✕ Chiudi</button>
                 </div>
             </div>
-            <div id="storicoList" class="storico-list">
-                <div class="storico-empty">Caricamento...</div>
+
+            <div style="display:flex; gap:8px; margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:10px;">
+                <button class="storico-tab active" data-tab="fornitore">Per Fornitore</button>
+                <button class="storico-tab" data-tab="articolo">Per Articolo</button>
+            </div>
+
+            <div id="filtroDataBar" style="display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+                <span style="font-size:12px; color:var(--text3); font-weight:600;">Periodo:</span>
+                <input type="date" id="filtroDataDa" class="input-standard" style="padding:6px 10px; font-size:13px; width:150px;">
+                <span style="color:var(--text3);">&#8594;</span>
+                <input type="date" id="filtroDataA" class="input-standard" style="padding:6px 10px; font-size:13px; width:150px;">
+                <button id="btnResetFiltroData" class="btn btn-secondary" style="padding:6px 12px; font-size:12px;">&#x2715; Reset</button>
+            </div>
+
+            <div id="tabFornitore" class="storico-panel active">
+            <div style="position:relative; margin-bottom:16px; box-sizing:border-box; width:100%;">
+                <input type="text" id="storicoSearch" class="input-standard"
+                    autocomplete="off"
+                    placeholder="Cerca fornitore, numero doc..."
+                    style="width:100%; box-sizing:border-box; padding-right:36px;">
+                <button id="btnClearFornitore" style="
+                    display:none; position:absolute; right:10px; top:50%; transform:translateY(-50%);
+                    background:none; border:none; color:var(--text3); font-size:18px;
+                    cursor:pointer; line-height:1; padding:4px 6px;" title="Pulisci ricerca">✕</button>
+            </div>
+                <div id="storicoList" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="text-align:center; color:var(--text3); padding:40px 0;">Caricamento...</div>
+                </div>
+            </div>
+
+            <div id="tabArticolo" class="storico-panel">
+                <div style="position:relative; margin-bottom:16px; width:100%; box-sizing:border-box;">
+                    <input type="text" id="searchArticolo" class="input-standard"
+                        placeholder="Cerca per codice o descrizione…"
+                        style="width:100%; max-width:100%; box-sizing:border-box;" autocomplete="off">
+                    <div id="acDropdown" style="
+                        display:none; position:absolute; top:calc(100% + 4px); left:0; right:0;
+                        background:var(--surface2); border:1px solid var(--border);
+                        border-radius:var(--radius-sm); z-index:200;
+                        max-height:260px; overflow-y:auto;
+                        box-shadow:0 8px 24px rgba(0,0,0,0.4);
+                    "></div>
+                    <button id="btnClearArticolo" style="
+                        display:none; position:absolute; right:10px; top:50%; transform:translateY(-50%);
+                        background:none; border:none; color:var(--text3); font-size:18px; cursor:pointer;
+                        line-height:1; padding:4px 6px;
+                    " title="Pulisci ricerca">✕</button>
+                </div>
+                <div id="artResult" style="flex:1; display:flex; flex-direction:column; min-height:0;">
+                    <div style="flex:1; display:flex; flex-direction:column; align-items:center;
+                        justify-content:center; color:var(--text3); gap:8px;">
+                        <div style="font-size:40px;">🔍</div>
+                        <div>Digita almeno 2 caratteri per cercare un articolo</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1418,13 +1497,17 @@ SCHEMA JSON
             salvaOrdineFirebase();
         });
 
+        let _cachedOrdiniStorico = null;
+
         document.getElementById('btnStorico').addEventListener('click', () => {
             showView('storico');
+            _cachedOrdiniStorico = null;
             caricaStorico();
         });
 
         document.getElementById('btnStoricoUpload').addEventListener('click', () => {
             showView('storico');
+            _cachedOrdiniStorico = null;
             caricaStorico();
         });
 
@@ -1436,11 +1519,26 @@ SCHEMA JSON
             }
         });
 
-        // Ricerca storico con debounce
+
+
+        // Ricerca storico fornitore con debounce
         let _storicoSearchTimer = null;
         document.getElementById('storicoSearch').addEventListener('input', (e) => {
             clearTimeout(_storicoSearchTimer);
             _storicoSearchTimer = setTimeout(() => caricaStorico(e.target.value), 350);
+        });
+
+        // Bottone ✕ fornitore
+        var btnClearForn = document.getElementById('btnClearFornitore');
+        document.getElementById('storicoSearch').addEventListener('input', function() {
+            btnClearForn.style.display = this.value.length > 0 ? 'block' : 'none';
+        });
+        btnClearForn.addEventListener('click', function() {
+            var input = document.getElementById('storicoSearch');
+            input.value = '';
+            btnClearForn.style.display = 'none';
+            input.focus();
+            caricaStorico('');
         });
 
         function showView(viewName) {
@@ -1921,69 +2019,71 @@ SCHEMA JSON
         // ---- Carica e mostra storico ----
         async function caricaStorico(filtro = '') {
             const listDiv = document.getElementById('storicoList');
-            listDiv.innerHTML = '<div class="storico-empty">Caricamento...</div>';
+            
+            if (!_cachedOrdiniStorico) {
+                listDiv.innerHTML = '<div class="storico-empty">Caricamento...</div>';
+                try {
+                    let query = db.collection('ordini_analizzati')
+                        .orderBy('timestamp', 'desc')
+                        .limit(500); // 500 per avere uno storico articoli più completo
 
-            try {
-                let query = db.collection('ordini_analizzati')
-                    .orderBy('timestamp', 'desc')
-                    .limit(50);
-
-                const snapshot = await query.get();
-
-                if (snapshot.empty) {
-                    listDiv.innerHTML = '<div class="storico-empty">Nessun ordine salvato.</div>';
+                    const snapshot = await query.get();
+                    _cachedOrdiniStorico = [];
+                    snapshot.forEach(d => _cachedOrdiniStorico.push({ id: d.id, ...d.data() }));
+                } catch (err) {
+                    console.error("Errore caricamento storico:", err);
+                    listDiv.innerHTML = '<div class="storico-empty" style="color:var(--red)">Errore caricamento: ' + err.message + '</div>';
                     return;
                 }
-
-                const docs = [];
-                snapshot.forEach(d => docs.push({ id: d.id, ...d.data() }));
-
-                // Filtra in memoria se c'è un termine di ricerca
-                const filtrati = filtro.trim()
-                    ? docs.filter(d => (d.search_tokens || '').includes(filtro.toLowerCase()))
-                    : docs;
-
-                if (filtrati.length === 0) {
-                    listDiv.innerHTML = '<div class="storico-empty">Nessun risultato per "' + filtro + '".</div>';
-                    return;
-                }
-
-                listDiv.innerHTML = filtrati.map(d => {
-                    const ts = d.timestamp?.toDate ? d.timestamp.toDate().toLocaleDateString('it-IT') : '—';
-                    const forn = d.fornitore?.nome || 'Fornitore sconosciuto';
-                    const docN = d.documento ? `${d.documento.tipo || 'Doc'} n. ${d.documento.numero || '?'} del ${d.documento.data || '?'}` : '';
-                    const tot  = d.totale_calcolato != null ? '€ ' + d.totale_calcolato.toFixed(2) : '—';
-                    const nArt = (d.articoli_calcolati || []).length;
-                    return `
-                      <div class="storico-card" data-id="${d.id}">
-                        <div class="storico-card-info">
-                          <div class="storico-card-title">${forn}</div>
-                          <div class="storico-card-meta">${docN} &nbsp;·&nbsp; ${nArt} articoli &nbsp;·&nbsp; Salvato il ${ts}</div>
-                        </div>
-                        <div class="storico-card-total" style="flex: 1; text-align: right; margin-right: 20px;">${tot}</div>
-                        <button class="btn btn-secondary delete-btn" data-id="${d.id}" title="Elimina documento" style="padding: 6px 10px; color: var(--red); border-color: var(--red-border); background: var(--red-bg);">🗑️</button>
-                      </div>`;
-                }).join('');
-
-                // Click su card → carica ordine nei risultati
-                listDiv.querySelectorAll('.storico-card').forEach(card => {
-                    card.addEventListener('click', (e) => {
-                        if (e.target.closest('.delete-btn')) {
-                            e.stopPropagation();
-                            eliminaOrdine(card.dataset.id);
-                            return;
-                        }
-                        const id = card.dataset.id;
-                        const ordine = filtrati.find(d => d.id === id);
-                        if (!ordine) return;
-                        caricaOrdineDaStorico(ordine);
-                    });
-                });
-
-            } catch (err) {
-                console.error("Errore caricamento storico:", err);
-                listDiv.innerHTML = '<div class="storico-empty" style="color:var(--red)">Errore caricamento: ' + err.message + '</div>';
             }
+
+            if (_cachedOrdiniStorico.length === 0) {
+                listDiv.innerHTML = '<div class="storico-empty">Nessun ordine salvato.</div>';
+                return;
+            }
+
+            // Filtra in memoria
+            const filtrati = filtro.trim()
+                ? _cachedOrdiniStorico.filter(d => (d.search_tokens || '').includes(filtro.toLowerCase()))
+                : _cachedOrdiniStorico;
+            const filtratiData = filtraPerData(filtrati);
+
+            if (filtratiData.length === 0) {
+                listDiv.innerHTML = '<div class="storico-empty">Nessun risultato' + (filtro ? ' per "' + filtro + '"' : '') + '.</div>';
+                return;
+            }
+
+            listDiv.innerHTML = filtratiData.map(d => {
+                const ts = d.timestamp?.toDate ? d.timestamp.toDate().toLocaleDateString('it-IT') : '—';
+                const forn = d.fornitore?.nome || 'Fornitore sconosciuto';
+                const docN = d.documento ? `${d.documento.tipo || 'Doc'} n. ${d.documento.numero || '?'} del ${d.documento.data || '?'}` : '';
+                const tot  = d.totale_calcolato != null ? '€ ' + d.totale_calcolato.toFixed(2) : '—';
+                const nArt = (d.articoli_calcolati || []).length;
+                return `
+                  <div class="storico-card" data-id="${d.id}">
+                    <div class="storico-card-info">
+                      <div class="storico-card-title">${forn}</div>
+                      <div class="storico-card-meta">${docN} &nbsp;·&nbsp; ${nArt} articoli &nbsp;·&nbsp; Salvato il ${ts}</div>
+                    </div>
+                    <div class="storico-card-total" style="flex: 1; text-align: right; margin-right: 20px;">${tot}</div>
+                    <button class="btn btn-secondary delete-btn" data-id="${d.id}" title="Elimina documento" style="padding: 6px 10px; color: var(--red); border-color: var(--red-border); background: var(--red-bg);">🗑️</button>
+                  </div>`;
+            }).join('');
+
+            // Click su card
+            listDiv.querySelectorAll('.storico-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('.delete-btn')) {
+                        e.stopPropagation();
+                        eliminaOrdine(card.dataset.id);
+                        return;
+                    }
+                    const id = card.dataset.id;
+                    const ordine = filtratiData.find(d => d.id === id);
+                    if (!ordine) return;
+                    caricaOrdineDaStorico(ordine);
+                });
+            });
         }
 
         async function eliminaOrdine(id) {
@@ -1992,6 +2092,7 @@ SCHEMA JSON
             }
             try {
                 await db.collection('ordini_analizzati').doc(id).delete();
+                _cachedOrdiniStorico = null; // Forza ricaricamento
                 caricaStorico(document.getElementById('storicoSearch').value);
             } catch (err) {
                 console.error("Errore durante l'eliminazione:", err);
@@ -2000,13 +2101,11 @@ SCHEMA JSON
         }
 
         function caricaOrdineDaStorico(ordine) {
-            // Ricostruisce un calcResult fittizio dagli articoli_calcolati salvati
             const calcResult = {
                 risultati:        ordine.articoli_calcolati || [],
                 avvertenze:       ordine.avvertenze || [],
                 totale_calcolato: ordine.totale_calcolato || 0,
             };
-            // Usa json_raw se disponibile, altrimenti ricostruisce il minimo
             const dataJSON = ordine.json_raw || {
                 fornitore:       ordine.fornitore || {},
                 documento:       ordine.documento || {},
@@ -2019,12 +2118,336 @@ SCHEMA JSON
             renderResults(calcResult, dataJSON);
             showView('results');
 
-            // Badge "Caricato da storico"
             const badge = document.getElementById('firebaseBadge');
             badge.style.display = 'inline-flex';
             badge.className = 'firebase-badge saved';
             badge.textContent = '📋 Da storico';
         }
+
+        // ── RICERCA PER ARTICOLO ──────────────────────────
+
+        (function() {
+            const searchArticoloEl = document.getElementById('searchArticolo');
+            const acDropdownEl     = document.getElementById('acDropdown');
+
+            // Switching tab articolo / fornitore
+            document.querySelectorAll('.storico-tab').forEach(function(tab) {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.storico-tab').forEach(function(t) { t.classList.remove('active'); });
+                    document.querySelectorAll('.storico-panel').forEach(function(p) { p.classList.remove('active'); });
+                    tab.classList.add('active');
+                    var panelId = tab.dataset.tab === 'articolo' ? 'tabArticolo' : 'tabFornitore';
+                    document.getElementById(panelId).classList.add('active');
+                    // Quando si apre il tab articolo, assicura che la cache sia caricata
+                    if (tab.dataset.tab === 'articolo' && !_cachedOrdiniStorico) {
+                        searchArticoloEl.placeholder = 'Caricamento dati…';
+                        searchArticoloEl.disabled = true;
+                        caricaStorico().then(function() {
+                            searchArticoloEl.placeholder = 'Cerca per codice o descrizione…';
+                            searchArticoloEl.disabled = false;
+                            searchArticoloEl.focus();
+                        }).catch(function() {
+                            searchArticoloEl.placeholder = 'Errore caricamento — riprova';
+                            searchArticoloEl.disabled = false;
+                        });
+                    }
+                });
+            });
+
+            // Indice articoli dalla cache esistente
+            function buildArticoliIndex() {
+                var map = new Map();
+                (_cachedOrdiniStorico || []).forEach(function(ordine) {
+                    (ordine.articoli_calcolati || []).forEach(function(r) {
+                        var key = (r.codice || '') + '|||' + (r.descrizione || '');
+                        if (!map.has(key)) {
+                            map.set(key, { codice: r.codice || '', descrizione: r.descrizione || '', um: r.um_pezzo || '', n: 0 });
+                        }
+                        map.get(key).n++;
+                    });
+                });
+                return Array.from(map.values()).sort(function(a, b) { return b.n - a.n; });
+            }
+
+            // Autocomplete
+            searchArticoloEl.addEventListener('input', function() {
+                var q = searchArticoloEl.value.trim().toLowerCase();
+                if (q.length < 2) { acDropdownEl.style.display = 'none'; return; }
+                if (!_cachedOrdiniStorico) {
+                    acDropdownEl.innerHTML = '<div class="ac-item" style="color:var(--text3);">⏳ Caricamento storico in corso…</div>';
+                    acDropdownEl.style.display = 'block';
+                    return;
+                }
+                var idx = buildArticoliIndex();
+                var matches = idx.filter(function(a) {
+                    return a.codice.toLowerCase().includes(q) || a.descrizione.toLowerCase().includes(q);
+                }).slice(0, 12);
+                if (!matches.length) { acDropdownEl.style.display = 'none'; return; }
+                acDropdownEl.innerHTML = matches.map(function(a) {
+                    return '<div class="ac-item" data-codice="' + a.codice.replace(/"/g, '&quot;') + '" data-desc="' + a.descrizione.replace(/"/g, '&quot;') + '">'
+                        + '<span style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--accent);margin-right:8px;">' + (a.codice || '—') + '</span>'
+                        + '<span>' + a.descrizione + '</span>'
+                        + '<div style="font-size:10px;color:var(--text3);margin-top:2px;">' + a.um + ' · ' + a.n + ' ordini</div>'
+                        + '</div>';
+                }).join('');
+                // Listener sui singoli item — NON su document
+                acDropdownEl.querySelectorAll('.ac-item').forEach(function(el) {
+                    el.addEventListener('mousedown', function(e) {
+                        e.preventDefault();
+                        var codice = el.dataset.codice;
+                        var desc   = el.dataset.desc;
+                        searchArticoloEl.value = (codice ? codice + ' — ' : '') + desc;
+                        acDropdownEl.style.display = 'none';
+                        renderArticoloStorico(codice, desc);
+                    });
+                });
+                acDropdownEl.style.display = 'block';
+            });
+
+            // Chiudi dropdown su blur
+            searchArticoloEl.addEventListener('blur', function() {
+                setTimeout(function() { acDropdownEl.style.display = 'none'; }, 150);
+            });
+
+            // Bottone ✕ — mostra/nascondi in base al contenuto
+            var btnClear = document.getElementById('btnClearArticolo');
+            searchArticoloEl.addEventListener('input', function() {
+                btnClear.style.display = searchArticoloEl.value.length > 0 ? 'block' : 'none';
+            });
+
+            // Bottone ✕ — click: azzera campo e ripristina stato iniziale
+            btnClear.addEventListener('click', function() {
+                searchArticoloEl.value = '';
+                btnClear.style.display = 'none';
+                acDropdownEl.style.display = 'none';
+                document.getElementById('artResult').innerHTML =
+                    '<div style="flex:1;display:flex;flex-direction:column;align-items:center;' +
+                    'justify-content:center;color:var(--text3);gap:8px;">'
+                    + '<div style="font-size:40px;">🔍</div>'
+                    + '<div>Digita almeno 2 caratteri per cercare un articolo</div></div>';
+                searchArticoloEl.focus();
+            });
+
+            // Render risultati articolo
+            function renderArticoloStorico(codice, descrizione) {
+                window._lastArtCodice = codice;
+                window._lastArtDesc   = descrizione;
+                var occorrenze = [];
+                (_cachedOrdiniStorico || []).forEach(function(ordine) {
+                    (ordine.articoli_calcolati || []).forEach(function(r) {
+                        if ((r.codice || '') === codice && (r.descrizione || '') === descrizione) {
+                            var dataDoc = (ordine.documento && ordine.documento.data) ? ordine.documento.data : '—';
+                            occorrenze.push({
+                                dataDoc:    dataDoc,
+                                fornitore:  (ordine.fornitore && ordine.fornitore.nome) ? ordine.fornitore.nome : '—',
+                                docTipo:    (ordine.documento && ordine.documento.tipo) ? ordine.documento.tipo : '',
+                                docNumero:  (ordine.documento && ordine.documento.numero) ? ordine.documento.numero : '',
+                                num_pezzi:  r.num_pezzi  || 0,
+                                um_pezzo:   r.um_pezzo   || '',
+                                sconti:     r.sconti     || [],
+                                listino_pz: r.listino_pz || 0,
+                                netto_pz:   r.netto_pz   || 0,
+                                oneri_pz:   r.oneri_pz   || 0,
+                                costo_pz:   r.costo_pz   || 0,
+                                tot_riga:   r.tot_riga   || 0,
+                            });
+                        }
+                    });
+                });
+                occorrenze.sort(function(a, b) { return a.dataDoc.localeCompare(b.dataDoc); });
+
+                // Applica filtro date
+                var fd = getFiltroDate();
+                if (fd.da || fd.a) {
+                    occorrenze = occorrenze.filter(function(o) {
+                        if (fd.da && o.dataDoc < fd.da) return false;
+                        if (fd.a  && o.dataDoc > fd.a)  return false;
+                        return true;
+                    });
+                }
+
+                var container = document.getElementById('artResult');
+                if (!occorrenze.length) {
+                    container.innerHTML = '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:8px;"><div style="font-size:40px;">📭</div><div>Nessun ordine trovato</div></div>';
+                    return;
+                }
+
+                var prezzi = occorrenze.map(function(o) { return o.costo_pz; }).filter(function(p) { return p > 0; });
+                var pMin   = Math.min.apply(null, prezzi);
+                var pMax   = Math.max.apply(null, prezzi);
+                var pMedio = prezzi.reduce(function(s, p) { return s + p; }, 0) / prezzi.length;
+                var qtaTot = occorrenze.reduce(function(s, o) { return s + o.num_pezzi; }, 0);
+
+                // Sparkline SVG
+                var W = 120, H = 34, pad = 4;
+                var range = pMax - pMin || 1;
+                var pts = prezzi.map(function(v, i) {
+                    var x = pad + (i / ((prezzi.length - 1) || 1)) * (W - pad * 2);
+                    var y = H - pad - ((v - pMin) / range) * (H - pad * 2);
+                    return x.toFixed(1) + ',' + y.toFixed(1);
+                }).join(' ');
+                var trendColor = (prezzi[prezzi.length - 1] <= prezzi[0]) ? '#22c55e' : '#ef4444';
+                var lastPt = pts.split(' ').pop().split(',');
+                var lx = lastPt[0], ly = lastPt[1];
+                var spark = prezzi.length >= 2
+                    ? '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">'
+                        + '<polyline points="' + pts + '" fill="none" stroke="' + trendColor + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'
+                        + '<circle cx="' + lx + '" cy="' + ly + '" r="3" fill="' + trendColor + '"/>'
+                        + '</svg>'
+                    : '';
+
+                var html = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;overflow:hidden;min-width:0;">'
+                    + '<div>'
+                    + '<div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;color:var(--accent);font-weight:700;">' + (codice || '\u2014') + '</div>'
+                    + '<div style="font-size:14px;font-weight:600;margin-top:2px;">' + descrizione + '</div>'
+                    + '</div>'
+                    + '<div style="margin-left:auto;display:flex;gap:24px;align-items:center;flex-wrap:wrap;flex-shrink:1;min-width:0;">'
+                    + '<div style="text-align:center;flex-shrink:1;min-width:50px;"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">Ordini</div><div style="font-size:20px;font-weight:700;color:var(--accent);">' + occorrenze.length + '</div></div>'
+                    + '<div style="text-align:center;flex-shrink:1;min-width:50px;"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">Qt\u00e0 totale</div><div style="font-size:20px;font-weight:700;">' + qtaTot + '</div></div>'
+                    + '<div style="text-align:center;flex-shrink:1;min-width:50px;"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">Costo medio</div><div style="font-size:20px;font-weight:700;color:var(--green);">\u20ac ' + pMedio.toFixed(2) + '</div></div>'
+                    + '<div style="text-align:center;flex-shrink:1;min-width:50px;"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">Range</div><div style="font-size:12px;font-weight:600;font-family:\'JetBrains Mono\',monospace;">\u20ac ' + pMin.toFixed(2) + ' \u2013 ' + pMax.toFixed(2) + '</div></div>'
+                    + (spark ? '<div style="flex-shrink:0;">' + spark + '</div>' : '')
+                    + '<button onclick="esportaArticoloXlsx()" class="btn btn-secondary" style="margin-left:8px;padding:6px 12px;font-size:12px;">&#x1F4E5; Excel</button>'
+                    + '</div></div>';
+
+                html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow-y:auto;flex:1;">'
+                    + '<table style="width:100%;border-collapse:collapse;">'
+                    + '<thead><tr>'
+                    + ['Data','Fornitore','Documento','Qtà','Sconti','Listino/Pz','Netto/Pz','Costo/Pz'].map(function(h, i) {
+                        var align = i >= 3 ? 'right' : 'left';
+                        return '<th style="text-align:' + align + ';padding:8px 12px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);background:var(--surface2);border-bottom:1px solid var(--border);position:sticky;top:0;">' + h + '</th>';
+                    }).join('')
+                    + '</tr></thead><tbody>';
+
+                var prevCosto = null;
+                occorrenze.forEach(function(o) {
+                    var scontiTxt = o.sconti.length ? o.sconti.map(function(s) { return s + '%'; }).join('+') : '—';
+                    var delta = '';
+                    if (prevCosto !== null && o.costo_pz > 0) {
+                        var d = (o.costo_pz - prevCosto) / prevCosto * 100;
+                        if (Math.abs(d) > 0.5) {
+                            var col = d > 0 ? 'var(--red)' : 'var(--green)';
+                            delta = '<span style="font-size:10px;color:' + col + ';margin-left:4px;">' + (d > 0 ? '▲' : '▼') + Math.abs(d).toFixed(1) + '%</span>';
+                        }
+                    }
+                    if (o.costo_pz > 0) prevCosto = o.costo_pz;
+                    var costoStyle = '';
+                    if (o.costo_pz === pMin) costoStyle = 'color:var(--green);font-weight:700;';
+                    else if (o.costo_pz === pMax && pMax !== pMin) costoStyle = 'color:var(--orange);font-weight:700;';
+                    html += '<tr style="border-bottom:1px solid rgba(51,56,80,0.3);">'
+                        + '<td style="padding:8px 12px;font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3);">' + o.dataDoc + '</td>'
+                        + '<td style="padding:8px 12px;font-size:12px;font-weight:500;">' + o.fornitore + '</td>'
+                        + '<td style="padding:8px 12px;font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text2);">' + o.docTipo + ' ' + o.docNumero + '</td>'
+                        + '<td style="padding:8px 12px;font-family:\'JetBrains Mono\',monospace;font-size:12px;text-align:right;">' + o.num_pezzi + ' ' + o.um_pezzo + '</td>'
+                        + '<td style="padding:8px 12px;font-family:\'JetBrains Mono\',monospace;font-size:12px;text-align:right;color:var(--accent);">' + scontiTxt + '</td>'
+                        + '<td style="padding:8px 12px;font-family:\'JetBrains Mono\',monospace;font-size:12px;text-align:right;">€ ' + o.listino_pz.toFixed(2) + '</td>'
+                        + '<td style="padding:8px 12px;font-family:\'JetBrains Mono\',monospace;font-size:12px;text-align:right;">€ ' + o.netto_pz.toFixed(2) + '</td>'
+                        + '<td style="padding:8px 12px;font-family:\'JetBrains Mono\',monospace;font-size:12px;text-align:right;' + costoStyle + '">€ ' + o.costo_pz.toFixed(2) + delta + '</td>'
+                        + '</tr>';
+                });
+                html += '</tbody></table></div>';
+                container.innerHTML = html;
+            }
+        })();
+        // ─── FINE RICERCA PER ARTICOLO ──────────────────────
+
+        // ─── FILTRO DATE CONDIVISO ──────────────────────────
+        function getFiltroDate() {
+            var da = document.getElementById('filtroDataDa').value;
+            var a  = document.getElementById('filtroDataA').value;
+            return { da: da, a: a };
+        }
+
+        function filtraPerData(ordini) {
+            var f = getFiltroDate();
+            return ordini.filter(function(o) {
+                var d = o.documento && o.documento.data ? o.documento.data : '';
+                if (f.da && d < f.da) return false;
+                if (f.a  && d > f.a)  return false;
+                return true;
+            });
+        }
+
+        function aggiornaTabAttivo() {
+            var tabArt = document.querySelector('.storico-tab[data-tab="articolo"]');
+            var isArt  = tabArt && tabArt.classList.contains('active');
+            if (isArt) {
+                var val = document.getElementById('searchArticolo').value;
+                if (val && val.includes(' \u2014 ')) {
+                    var parts  = val.split(' \u2014 ');
+                    var codice = parts[0];
+                    var desc   = parts.slice(1).join(' \u2014 ');
+                    if (typeof window._renderArticoloStorico === 'function') {
+                        window._renderArticoloStorico(codice, desc);
+                    }
+                }
+            } else {
+                caricaStorico(document.getElementById('storicoSearch').value);
+            }
+        }
+
+        document.getElementById('filtroDataDa').addEventListener('change', function() { aggiornaTabAttivo(); });
+        document.getElementById('filtroDataA').addEventListener('change',  function() { aggiornaTabAttivo(); });
+        document.getElementById('btnResetFiltroData').addEventListener('click', function() {
+            document.getElementById('filtroDataDa').value = '';
+            document.getElementById('filtroDataA').value  = '';
+            aggiornaTabAttivo();
+        });
+        // ─── FINE FILTRO DATE ──────────────────────────────
+
+        // ─── EXPORT EXCEL ARTICOLO ──────────────────────────
+        function esportaArticoloXlsx() {
+            if (!window._lastArtCodice) return;
+
+            var codice = window._lastArtCodice;
+            var desc   = window._lastArtDesc;
+            var f = getFiltroDate();
+
+            var righe = [];
+            (_cachedOrdiniStorico || []).forEach(function(ordine) {
+                (ordine.articoli_calcolati || []).forEach(function(r) {
+                    if ((r.codice || '') === codice && (r.descrizione || '') === desc) {
+                        var d = ordine.documento && ordine.documento.data ? ordine.documento.data : '';
+                        if (f.da && d < f.da) return;
+                        if (f.a  && d > f.a)  return;
+                        righe.push({
+                            'Data':       d,
+                            'Fornitore':  (ordine.fornitore && ordine.fornitore.nome) || '',
+                            'Tipo Doc':   (ordine.documento && ordine.documento.tipo)   || '',
+                            'N. Doc':     (ordine.documento && ordine.documento.numero) || '',
+                            'Qtà':        r.num_pezzi  || 0,
+                            'UM':         r.um_pezzo   || '',
+                            'Sconti':     (r.sconti || []).map(function(s) { return s + '%'; }).join('+'),
+                            'Listino/Pz': r.listino_pz || 0,
+                            'Netto/Pz':   r.netto_pz   || 0,
+                            'Oneri/Pz':   r.oneri_pz   || 0,
+                            'Costo/Pz':   r.costo_pz   || 0,
+                            'Tot. Riga':  r.tot_riga   || 0
+                        });
+                    }
+                });
+            });
+
+            righe.sort(function(a, b) { return a['Data'].localeCompare(b['Data']); });
+
+            function doExport() {
+                var ws = XLSX.utils.json_to_sheet(righe);
+                var wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Storico');
+                var filename = 'storico_' + (codice || desc.substring(0, 20)).replace(/[^a-zA-Z0-9]/g, '_') + '.xlsx';
+                XLSX.writeFile(wb, filename);
+            }
+
+            if (typeof XLSX !== 'undefined') {
+                doExport();
+            } else {
+                var s = document.createElement('script');
+                s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+                s.onload = doExport;
+                document.head.appendChild(s);
+            }
+        }
+        // ─── FINE EXPORT EXCEL ARTICOLO ───────────────────────────
 
     </script>
 </body>
