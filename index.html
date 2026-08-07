@@ -429,7 +429,13 @@
 
     <!-- Firebase SDK (compat v9) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <!-- Accesso: copre la pagina finche' non c'e' un utente autenticato.
+         Qui basta l'overlay, perche' ogni lettura Firestore parte da un'azione
+         dell'utente e non al caricamento. -->
+    <script src="auth-gate.js"></script>
 </head>
 <body>
 
@@ -603,7 +609,9 @@
             messagingSenderId: "696561179056",
             appId: "1:696561179056:web:fc6b1db62ed256fd3fde75"
         };
-        firebase.initializeApp(firebaseConfig);
+        // auth-gate.js ha gia' inizializzato l'app: un secondo initializeApp
+        // lancerebbe "duplicate-app" e bloccherebbe tutto lo script.
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
         // Stato corrente — popolato dopo ogni analisi riuscita
