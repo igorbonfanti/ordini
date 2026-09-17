@@ -3,46 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analisi Ordini Fornitori - Antigravity</title>
+    <title>Il Magazzino Edile — Ordini</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="tema.css?v=2">
+    <link rel="stylesheet" href="base.css?v=2">
+    <!-- Prima del corpo, altrimenti la pagina lampeggia col tema sbagliato. -->
+    <script src="tema.js?v=2"></script>
     <style>
-        :root {
-            /* ============ BACKGROUNDS ============ */
-            --bg: #0f1117;           /* Sfondo principale dell'app */
-            --surface: #1a1d27;      /* Superficie di base (Card principale) */
-            --surface2: #232735;     /* Superficie secondaria */
-            --surface3: #2c3044;     /* Superficie terziaria */
-            
-            /* ============== BORDERS ============== */
-            --border: #333850;       /* Bordi standard divisori */
-            
-            /* ================ TYPOGRAPHY ================ */
-            --text: #e8eaf0;         /* Testo primario */
-            --text2: #9fa4b8;        /* Testo secondario */
-            --text3: #6b7194;        /* Testo terziario / Placeholder */
-            
-            /* ============= BRAND / ACCENT ============= */
-            --accent: #f59e0b;       /* Ambra/Arancione primario */
-            --accent2: #fbbf24;      /* Ambra chiaro */
-            --accent-bg: rgba(245, 158, 11, 0.08); /* Sfondo accent */
-            
-            /* ============ STATUS COLORS ============ */
-            --green: #22c55e;        /* Successo */
-            --green-bg: rgba(34, 197, 94, 0.08);
-            --green-border: rgba(34, 197, 94, 0.2);
-            
-            --red: #ef4444;          /* Errore */
-            --red-bg: rgba(239, 68, 68, 0.08);
-            --red-border: rgba(239, 68, 68, 0.25);
-            
-            --orange: #f97316;       /* Warning */
-            --orange-bg: rgba(249, 115, 22, 0.1);
-            
-            /* =============== BORDER RADIUS =============== */
-            --radius: 12px;
-            --radius-sm: 8px;
-            --radius-full: 9999px;
-        }
+        /* Colori e misure arrivano da tema.css, condiviso con le altre app del
+           magazzino e caricato prima di questo blocco. Qui non si ridefinisce
+           nessuna variabile: se un colore manca, si aggiunge la'. */
 
         html, body {
             height: 100vh;
@@ -70,25 +40,13 @@
         }
 
         /* ---------------- HEADER ---------------- */
-        .app-header {
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            padding: 16px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo {
-            font-weight: 700;
-            font-size: 18px;
-            color: var(--accent);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        /* Testata e menu sono .ag-header e .ag-nav, definiti in base.css
+           assieme alle altre app del magazzino. Qui resta la fila di comandi
+           specifici di quest'app (modello, chiave API). */
         .settings {
             display: flex;
-            gap: 12px;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         /* ---------------- INPUTS & BUTTONS ---------------- */
@@ -112,36 +70,8 @@
             color: var(--text3);
         }
 
-        .btn {
-            padding: 10px 16px;
-            border-radius: var(--radius-sm);
-            border: none;
-            cursor: pointer;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all .15s ease-in-out;
-        }
-        .btn-primary {
-            background: var(--accent);
-            color: var(--bg);
-        }
-        .btn-primary:hover {
-            background: var(--accent2);
-        }
-        .btn-secondary {
-            background: var(--surface3);
-            color: var(--text2);
-            border: 1px solid var(--border);
-        }
-        .btn-secondary:hover {
-            background: var(--border);
-            color: var(--text);
-        }
+        /* I bottoni sono definiti in base.css, condiviso con le altre app del
+           magazzino. Qui non si ridefiniscono: se un aspetto manca, si aggiunge la'. */
 
         /* ---------------- MAIN CONTENT ---------------- */
         .main-content {
@@ -235,7 +165,7 @@
             z-index: 2;
         }
         tbody tr {
-            border-bottom: 1px solid rgba(51, 56, 80, 0.3);
+            border-bottom: 1px solid var(--border);
             cursor: pointer;
             transition: background .1s;
         }
@@ -323,7 +253,7 @@
             font-weight: 500;
         }
         .firebase-badge.saved   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
-        .firebase-badge.saving  { background: var(--accent-bg); color: var(--accent); border: 1px solid rgba(245,158,11,0.3); }
+        .firebase-badge.saving  { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-border); }
         .firebase-badge.error   { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
 
         /* ---- VISTA STORICO ---- */
@@ -396,14 +326,14 @@
         .storico-tab.active { color: var(--accent); background: var(--accent-bg); }
         .ac-item {
             padding: 10px 14px; cursor: pointer; font-size: 13px;
-            border-bottom: 1px solid rgba(51,56,80,0.3);
+            border-bottom: 1px solid var(--border);
         }
         .ac-item:last-child { border-bottom: none; }
         .ac-item:hover { background: var(--surface3); }
 
         /* ---- PRINT STYLES ---- */
         @media print {
-            .app-header, .results-toolbar, #btnNuovo,
+            .results-toolbar, #btnNuovo,
             .results-header button, .storico-header { display: none !important; }
             body { background: white; color: black; overflow: visible !important; }
             .main-content { overflow: visible !important; }
@@ -435,21 +365,24 @@
     <!-- Accesso: copre la pagina finche' non c'e' un utente autenticato.
          Qui basta l'overlay, perche' ogni lettura Firestore parte da un'azione
          dell'utente e non al caricamento. -->
-    <script src="auth-gate.js"></script>
+    <script src="auth-gate.js?v=2"></script>
 </head>
 <body>
 
-    <div class="app-header">
-        <div class="logo">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
-            Antigravity Ordini <span style="font-size: 12px; color: var(--text3); margin-left: 8px; font-weight: normal;">v1.2.2</span>
+    <header class="ag-header">
+        <div class="ag-logo">ME</div>
+        <div class="ag-titolo">
+            <h1>Il Magazzino Edile</h1>
+            <span class="ag-modulo">Ordini<span class="ag-versione">v1.3.0</span></span>
         </div>
-        <div class="settings">
+        <div class="ag-azioni settings">
+            <button id="btnTema" class="btn btn-icona" title="Cambia tema">&#127769;</button>
             <select id="modelSelect" class="input-standard">
                 <optgroup label="Claude">
-                    <option value="claude-sonnet-4-6">Claude Sonnet 4.6</option>
-                    <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5</option>
-                    <option value="claude-opus-4-8" selected>Claude Opus 4.8</option>
+                    <option value="claude-opus-5" selected>Claude Opus 5</option>
+                    <option value="claude-sonnet-5">Claude Sonnet 5</option>
+                    <option value="claude-haiku-4-5">Claude Haiku 4.5</option>
+                    <option value="claude-opus-4-8">Claude Opus 4.8 (precedente)</option>
                 </optgroup>
                 <optgroup label="Gemini">
                     <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
@@ -458,9 +391,14 @@
                 </optgroup>
             </select>
             <input type="password" id="apiKeyInput" class="input-standard" placeholder="API Key" style="width: 300px;">
-            <button class="btn btn-secondary" id="btnTestApi">Test API</button>
+            <button class="btn" id="btnTestApi">Test API</button>
         </div>
-    </div>
+    </header>
+
+    <nav class="ag-nav">
+        <button class="ag-nav-voce attiva" id="navCarica">&#128228; Carica documento</button>
+        <button class="ag-nav-voce" id="navStorico">&#128220; Storico ordini</button>
+    </nav>
 
     <div class="main-content">
         <!-- VISTA UPLOAD -->
@@ -578,7 +516,7 @@
                         background:var(--surface2); border:1px solid var(--border);
                         border-radius:var(--radius-sm); z-index:200;
                         max-height:260px; overflow-y:auto;
-                        box-shadow:0 8px 24px rgba(0,0,0,0.4);
+                        box-shadow:var(--shadow-lg);
                     "></div>
                     <button id="btnClearArticolo" style="
                         display:none; position:absolute; right:10px; top:50%; transform:translateY(-50%);
@@ -621,8 +559,85 @@
         // ==========================================
         // SYSTEM PROMPT
         // ==========================================
-        const SYSTEM_PROMPT = `Analizzi documenti commerciali di fornitori edili italiani (conferme d'ordine,
-fatture proforma, offerte di vendita, proposte d'ordine, ordini di vendita).
+        const SYSTEM_PROMPT = `══════════════════════════════════════════════════════
+IL TUO OBIETTIVO
+══════════════════════════════════════════════════════
+
+Il Magazzino Edile compra materiali da decine di fornitori, e ogni fornitore
+scrive i propri documenti a modo suo.
+
+Il tuo lavoro è uno solo: per ogni riga del documento, capire quanto costa
+davvero UN PEZZO FISICO che entra in magazzino — il sacco, il secchio, la
+latta, il blocco, il pannello — al netto di tutti gli sconti e con gli oneri
+accessori (trasporto, bancali, sovrapprezzi) ripartiti in modo equo.
+
+Serve a questo: chi compra deve poter confrontare lo stesso prodotto fra
+fornitori diversi, e poi metterci un prezzo di vendita. Un prezzo al kg o al
+metro cubo scritto sul documento del fornitore non si può confrontare con
+quello che sta sullo scaffale del magazzino.
+
+Se sbagli a capire qual è il pezzo fisico, sbagli tutto il resto. È la cosa
+su cui vale la pena spendere il ragionamento.
+
+══════════════════════════════════════════════════════
+DOCUMENTI CHE NON HAI MAI VISTO
+══════════════════════════════════════════════════════
+
+Le regole più sotto descrivono i casi che abbiamo già incontrato. Sono
+esempi di un metodo, NON l'elenco completo di ciò che può arrivare.
+
+Ti arriveranno conferme d'ordine, fatture, fatture proforma, preventivi,
+offerte, proposte d'ordine, bolle, listini — da fornitori mai visti, con
+tabelle disposte in un altro modo, in un'altra lingua, o scritte male. È
+previsto: usa la tua intelligenza e vai avanti. Meglio un'estrazione
+ragionata e segnalata che un rifiuto.
+
+Davanti a un documento che non riconosci, procedi così:
+
+  1. Capisci CHE COS'È e A COSA SERVE. Il tipo di documento cambia il
+     significato dei numeri: un preventivo espone prezzi proposti, una
+     fattura importi dovuti, una bolla quantità consegnate.
+  2. Trova la tabella delle righe merce. Può non avere intestazioni
+     riconoscibili: guarda la forma dei dati, non le etichette.
+  3. Per ogni riga chiediti: che cosa arriva fisicamente in magazzino, e in
+     che cosa si conta? Se la descrizione dice "sacchi 25 kg", il pezzo è
+     il sacco. Se il prodotto si vende a superficie, il pezzo è il metro quadro.
+  4. Trova il prezzo di listino e A QUALE unità si riferisce. Sono due
+     informazioni diverse e vanno estratte separatamente.
+  5. Trova gli sconti — possono essere in colonna, in calce, a cascata.
+  6. Trova gli oneri accessori e capisci come vanno ripartiti.
+  7. Trova i totali e usali come verifica.
+
+Se un'etichetta non la conosci, ragiona su che cosa rappresenta il numero,
+non su come si chiama la colonna. I nomi cambiano da fornitore a fornitore;
+la sostanza commerciale no.
+
+══════════════════════════════════════════════════════
+QUANDO NON SEI SICURO
+══════════════════════════════════════════════════════
+
+Non inventare mai un numero. Se un dato non c'è nel documento, mettilo a
+null: il calcolo a valle sa gestire i null, non sa gestire un valore
+inventato.
+
+VERIFICA SEMPRE: ricalcola il totale di ogni riga (listino per quantità,
+meno gli sconti) e confrontalo con il totale scritto sul documento. Se non
+coincide, hai capito male qualcosa — quasi sempre il pezzo fisico o
+l'unità a cui si riferisce il prezzo.
+
+Usa l'array "avvertenze" per dire in italiano, una riga per problema:
+  - che cosa hai dovuto dedurre invece di leggere;
+  - dove il tuo ricalcolo non torna con il documento, e di quanto;
+  - se il tracciato non somiglia a nessuno di quelli descritti sotto;
+  - qualsiasi cosa chi legge il risultato dovrebbe controllare a mano.
+
+Un'estrazione segnalata è utile. Un'estrazione sbagliata e sicura di sé
+fa comprare male.
+
+══════════════════════════════════════════════════════
+FORMATO DELLA RISPOSTA
+══════════════════════════════════════════════════════
+
 Restituisci SOLO un oggetto JSON valido. Mai markdown, mai backtick, mai testo.
 
 🛑 ATTENZIONE - SINTASSI JSON CRITICA:
@@ -633,6 +648,9 @@ Restituisci SOLO un oggetto JSON valido. Mai markdown, mai backtick, mai testo.
 ══════════════════════════════════════════════════════
 REGOLA 1 — IDENTIFICAZIONE DEL PEZZO FISICO
 ══════════════════════════════════════════════════════
+
+Questa regola vale per qualunque documento, compresi quelli che non
+somigliano a nessuno dei casi descritti più sotto.
 
 L'obiettivo è trovare il PEZZO FISICO che entra in magazzino:
 sacco, secchio, latta, bidone, blocco, tavella, tanica, rotolo,
@@ -679,7 +697,12 @@ Il calcolo poi darà automaticamente:
   Oneri/m2 = 0,14€ (40€ trasporto ÷ 276,48 proporzione)
   Costo/m2 = 3,02€
 
-Come riconoscere un isolante: cercare nel codice o nella descrizione queste parole chiave:
+Come riconoscere un isolante: le parole chiave qui sotto sono quelle già
+incontrate, non un elenco chiuso. Se un prodotto è evidentemente un isolante
+termico o acustico ma non compare fra queste, applica lo stesso principio e
+segnalalo in "avvertenze".
+
+Parole chiave note:
   lana vetro, lana roccia, lana minerale, mineral wool, rock wool, glass wool,
   polistirene, polistirolo, EPS, XPS, isolante, isolamento, pannello termico,
   pannello acustico, fonoassorbente, fonoisolante, Silence, Acoustic,
@@ -703,7 +726,13 @@ con UM = MC o m3:
     listino_pz = prezzo_mc × qty_um_per_pezzo
     netto_pz   = listino_pz × (1 - sconti)
 
-Tabella sacchi_per_m3 per codice:
+Tabella sacchi_per_m3 per codice. Se incontri un codice Laterlite che non è
+in tabella NON inventare una conversione: cerca nel documento il peso o il
+volume del sacco, e se non c'è lascia num_pezzi_fisici sulla quantità come
+scritta, segnalando in "avvertenze" che la conversione in sacchi non è stata
+possibile.
+
+Codici noti:
   LAAS110330, LAAS120360, LAAS140375, LAAS140650,
   LAAS160375, LAAS160650 → 20 sacchi/m3, 50 L/sacco
   
@@ -1025,7 +1054,8 @@ SCHEMA JSON
 {
   "fornitore": {"nome": "", "piva": ""},
   "documento": {
-    "tipo": "conferma_ordine|fattura_proforma|offerta_vendita|proposta_ordine|ordine_vendita|restituzione",
+    "tipo": "conferma_ordine|fattura|fattura_proforma|offerta_vendita|preventivo|proposta_ordine|ordine_vendita|ddt|listino|restituzione|altro",
+    "tipo_note": "solo se tipo = altro: che cos'è il documento, in poche parole",
     "numero": "",
     "data": "YYYY-MM-DD",
     "resa": "",
@@ -1054,7 +1084,7 @@ SCHEMA JSON
       "tipo_riga": "articolo|bancale_rendere|bancale_venduto|bancale_perdere|onere_riga|sovrapp_globale",
       "articolo_padre_pos": null,
       "num_pezzi_fisici": 0,
-      "um_pezzo_fisico": "sacco|secchio|latta|blocco|tanica|rotolo|scatola|blister|cartuccia|fustino|pz",
+      "um_pezzo_fisico": "sacco|secchio|latta|blocco|tanica|rotolo|scatola|blister|cartuccia|fustino|m2|pz|...",
       "contenuto_pezzo": "",
       "um_prezzo": "kg|lt|L|TO|m2|pc|pz|mt",
       "qty_totale_um": 0,
@@ -1070,7 +1100,15 @@ SCHEMA JSON
     }
   ],
   "avvertenze": []
-}`;
+}
+
+NOTA SUGLI ELENCHI DI VALORI: dove lo schema mostra alternative separate
+da "|" sono i valori già incontrati, non una gabbia. Se il documento
+presenta un caso diverso — un contenitore che non c'è nell'elenco, un tipo
+di documento nuovo — usa la parola che descrive meglio la realtà, scrivila
+in minuscolo e senza spazi, e segnala la scelta in "avvertenze". Restano
+invece a elenco chiuso, perché il calcolo a valle ci si appoggia:
+"tipo_riga" e "oneri_generali.trasporto_tipo".`;
 
         // ==========================================
         // CALCOLO JAVASCRIPT LOGIC
@@ -1381,8 +1419,18 @@ SCHEMA JSON
         if (localStorage.getItem('ordini_apiKey')) {
             apiKeyInput.value = localStorage.getItem('ordini_apiKey');
         }
-        if (localStorage.getItem('ordini_model')) {
-            modelSelect.value = localStorage.getItem('ordini_model');
+        // Il modello ricordato puo' essere uno ritirato (l'elenco cambia quando
+        // escono versioni nuove). Se non e' piu' fra le opzioni il select
+        // resterebbe vuoto e la richiesta partirebbe senza modello: meglio
+        // ricadere sul predefinito e dimenticare la scelta vecchia.
+        const modelloSalvato = localStorage.getItem('ordini_model');
+        if (modelloSalvato) {
+            const esiste = Array.from(modelSelect.options).some(o => o.value === modelloSalvato);
+            if (esiste) {
+                modelSelect.value = modelloSalvato;
+            } else {
+                localStorage.removeItem('ordini_model');
+            }
         }
 
         modelSelect.addEventListener('change', () => {
@@ -1560,7 +1608,24 @@ SCHEMA JSON
             if (viewName === 'loading')  loadingView.classList.add('active');
             if (viewName === 'results')  resultsView.classList.add('active');
             if (viewName === 'storico')  document.getElementById('storicoView').classList.add('active');
+
+            aggiornaMenu(viewName);
         }
+
+        // La linguetta accesa segue la vista, non il click: cosi' resta giusta
+        // anche quando e' il programma a cambiare schermata da solo.
+        function aggiornaMenu(viewName) {
+            const storico = viewName === 'storico';
+            document.getElementById('navCarica').classList.toggle('attiva', !storico);
+            document.getElementById('navStorico').classList.toggle('attiva', storico);
+        }
+
+        document.getElementById('navCarica').addEventListener('click', () => showView('upload'));
+        document.getElementById('navStorico').addEventListener('click', () => {
+            showView('storico');
+            _cachedOrdiniStorico = null;
+            caricaStorico();
+        });
 
         async function handleFile(file) {
             if (file.type !== 'application/pdf') {
@@ -1699,6 +1764,66 @@ SCHEMA JSON
             }
         }
 
+        // Configurazione del ragionamento, che dipende dal modello.
+        //
+        // Sui modelli attuali si usa il ragionamento adattivo: e' Claude a
+        // decidere quanto pensare, documento per documento. Serve proprio per
+        // il lavoro che gli chiediamo - capire un tracciato mai visto - e su
+        // una bolla banale non spreca niente.
+        //
+        // Haiku 4.5 e i modelli precedenti non hanno l'adattivo: vogliono un
+        // tetto fisso di token, che deve restare sotto max_tokens.
+        function configurazioneRagionamento(model) {
+            if (model === 'claude-haiku-4-5') {
+                return { type: 'enabled', budget_tokens: 8000 };
+            }
+            return { type: 'adaptive' };
+        }
+
+        // Legge una risposta in streaming dell'API Messages e restituisce i
+        // blocchi completi. Col ragionamento acceso e un PDF pesante una
+        // singola richiesta puo' durare minuti: senza streaming si rischia di
+        // sbattere contro il timeout HTTP a meta' elaborazione.
+        async function leggiFlusso(response) {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            const blocchi = [];
+            let stopReason = null;
+            let stopDetails = null;
+            let resto = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                resto += decoder.decode(value, { stream: true });
+
+                // Gli eventi sono separati da una riga vuota; l'ultimo pezzo
+                // puo' essere tronco, quindi resta nel buffer.
+                const pezzi = resto.split('\n\n');
+                resto = pezzi.pop();
+
+                for (const pezzo of pezzi) {
+                    const riga = pezzo.split('\n').find(l => l.startsWith('data:'));
+                    if (!riga) continue;
+                    let ev;
+                    try { ev = JSON.parse(riga.slice(5).trim()); } catch (e) { continue; }
+
+                    if (ev.type === 'content_block_start') {
+                        blocchi[ev.index] = { type: ev.content_block.type, text: ev.content_block.text || '' };
+                    } else if (ev.type === 'content_block_delta') {
+                        if (!blocchi[ev.index]) blocchi[ev.index] = { type: 'text', text: '' };
+                        if (ev.delta.type === 'text_delta') blocchi[ev.index].text += ev.delta.text;
+                    } else if (ev.type === 'message_delta') {
+                        if (ev.delta.stop_reason) stopReason = ev.delta.stop_reason;
+                        if (ev.delta.stop_details) stopDetails = ev.delta.stop_details;
+                    } else if (ev.type === 'error') {
+                        throw new Error((ev.error && ev.error.message) || 'Errore durante lo streaming');
+                    }
+                }
+            }
+            return { blocchi, stopReason, stopDetails };
+        }
+
         async function processDocument(base64Data, model, apiKey) {
             const isAnthropic = model.startsWith("claude");
             
@@ -1709,12 +1834,13 @@ SCHEMA JSON
                         "Content-Type": "application/json",
                         "x-api-key": apiKey,
                         "anthropic-version": "2023-06-01",
-                        "anthropic-beta": "pdfs-2024-09-25",
                         "anthropic-dangerous-direct-browser-access": "true"
                     },
                     body: JSON.stringify({
                         model: model,
-                        max_tokens: 16384,
+                        max_tokens: 32000,
+                        stream: true,
+                        thinking: configurazioneRagionamento(model),
                         system: SYSTEM_PROMPT,
                         messages: [
                             {
@@ -1730,20 +1856,37 @@ SCHEMA JSON
                                     },
                                     {
                                         type: "text",
-                                        text: "Estrai i dati da questo PDF secondo le istruzioni. Restituisci SOLO un oggetto JSON valido, senza testo o markdown."
+                                        text: "Estrai i dati da questo documento secondo le istruzioni. Restituisci SOLO un oggetto JSON valido, senza testo o markdown."
                                     }
                                 ]
                             }
                         ]
                     })
                 });
-                
+
                 if (!response.ok) {
                     const err = await response.json();
-                    throw new Error(err.error?.message || "Errore API Anthropic");
+                    throw new Error((err.error && err.error.message) || "Errore API Anthropic");
                 }
-                const result = await response.json();
-                return extractJson(result.content[0].text);
+
+                const { blocchi, stopReason, stopDetails } = await leggiFlusso(response);
+
+                // Un rifiuto arriva con HTTP 200: senza questo controllo si
+                // finirebbe a cercare del JSON in una risposta vuota.
+                if (stopReason === 'refusal') {
+                    throw new Error('Il modello ha rifiutato di elaborare il documento'
+                        + (stopDetails && stopDetails.category ? ' (' + stopDetails.category + ')' : '')
+                        + '. Prova con un altro modello.');
+                }
+                if (stopReason === 'max_tokens') {
+                    throw new Error('Risposta troncata: il documento ha troppe righe per una sola elaborazione. Prova a dividerlo.');
+                }
+
+                // Col ragionamento acceso il primo blocco e' il pensiero, non
+                // il testo: va cercato quello giusto invece di prendere [0].
+                const testo = blocchi.filter(b => b && b.type === 'text').map(b => b.text).join('');
+                if (!testo.trim()) throw new Error('Risposta vuota dal modello');
+                return extractJson(testo);
             } else {
                 // Gemini
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
@@ -2294,7 +2437,8 @@ SCHEMA JSON
                     var y = H - pad - ((v - pMin) / range) * (H - pad * 2);
                     return x.toFixed(1) + ',' + y.toFixed(1);
                 }).join(' ');
-                var trendColor = (prezzi[prezzi.length - 1] <= prezzi[0]) ? '#22c55e' : '#ef4444';
+                // I due verdi/rossi del tema, presi dalle variabili: cambiano col tema chiaro.
+                var trendColor = (prezzi[prezzi.length - 1] <= prezzi[0]) ? 'var(--green)' : 'var(--red)';
                 var lastPt = pts.split(' ').pop().split(',');
                 var lx = lastPt[0], ly = lastPt[1];
                 var spark = prezzi.length >= 2
@@ -2342,7 +2486,7 @@ SCHEMA JSON
                     var costoStyle = '';
                     if (o.costo_pz === pMin) costoStyle = 'color:var(--green);font-weight:700;';
                     else if (o.costo_pz === pMax && pMax !== pMin) costoStyle = 'color:var(--orange);font-weight:700;';
-                    html += '<tr style="border-bottom:1px solid rgba(51,56,80,0.3);">'
+                    html += '<tr style="border-bottom:1px solid var(--border);">'
                         + '<td style="padding:8px 12px;font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3);">' + o.dataDoc + '</td>'
                         + '<td style="padding:8px 12px;font-size:12px;font-weight:500;">' + o.fornitore + '</td>'
                         + '<td style="padding:8px 12px;font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text2);">' + o.docTipo + ' ' + o.docNumero + '</td>'
@@ -2458,5 +2602,9 @@ SCHEMA JSON
         // ─── FINE EXPORT EXCEL ARTICOLO ───────────────────────────
 
     </script>
+<script>
+  // L'interruttore chiaro/scuro: tema.js si occupa di icona, memoria e attributo.
+  if (window.Tema) Tema.collega(document.getElementById('btnTema'));
+</script>
 </body>
 </html>
