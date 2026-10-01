@@ -6,9 +6,9 @@
 <linearGradient id="l" x1="0" y1="0" x2="0" y2="1">
 <stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/>
 </linearGradient>
-
+<mask id="m"><rect width="64" height="64" fill="#fff"/><circle cx="47" cy="17" r="4.2" fill="#000"/><g fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.4"><path d="M37.8 30.6A8 8 0 1 0 37.8 42.4"/><path d="M23.5 34h11M23.5 39h11"/></g></mask>
 </defs>
 <rect width="64" height="64" rx="14" fill="url(#g)"/>
 <rect width="64" height="64" rx="14" fill="url(#l)"/>
-<g transform="translate(32 32) scale(1.08) translate(-32 -32)"><g fill="#ffffff"><rect x="14" y="31" width="9" height="17" rx="2"/><rect x="27.5" y="22" width="9" height="26" rx="2"/><rect x="41" y="13" width="9" height="35" rx="2"/><rect x="11" y="49.5" width="42" height="4" rx="2"/></g></g>
+<g transform="translate(32 32) scale(1.08) translate(-32 -32)"><g fill="#ffffff" mask="url(#m)"><path d="M31 6h21a6 6 0 0 1 6 6v21a6 6 0 0 1-1.8 4.2L36.4 57a6 6 0 0 1-8.5 0L7 36.1a6 6 0 0 1 0-8.5L26.8 7.8A6 6 0 0 1 31 6z"/></g></g>
 </svg>
